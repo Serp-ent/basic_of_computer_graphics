@@ -55,6 +55,32 @@ Ekran::drawLine(int x0, int y0, int x1, int y1, uint red, uint green, uint blue)
 }
 
 void
+Ekran::drawCircle(int x0,
+                  int y0,
+                  double radius,
+                  uint red,
+                  uint green,
+                  uint blue)
+{
+  int x_end = radius / std::sqrt(2);
+  for (int x = 0; x <= x_end; ++x) {
+    int y = std::sqrt(radius * radius - x * x);
+
+    drawPixel(&this->canvas, x0 + x, y0 + y, red, green, blue);
+    drawPixel(&this->canvas, x0 + y, y0 + x, red, green, blue);
+
+    drawPixel(&this->canvas, x0 + y, y0 - x, red, green, blue);
+    drawPixel(&this->canvas, x0 + x, y0 - y, red, green, blue);
+
+    drawPixel(&this->canvas, x0 - x, y0 - y, red, green, blue);
+    drawPixel(&this->canvas, x0 - y, y0 - x, red, green, blue);
+
+    drawPixel(&this->canvas, x0 - y, y0 + x, red, green, blue);
+    drawPixel(&this->canvas, x0 - x, y0 + y, red, green, blue);
+  }
+}
+
+void
 Ekran::mousePressEvent(QMouseEvent* event)
 {
   mousePresssed = true;
@@ -94,7 +120,21 @@ Ekran::mouseMoveEvent(QMouseEvent* event)
   canvas = canvasClone;
 
   QPoint p = event->pos();
-  drawLine(pressStart.x(), pressStart.y(), p.x(), p.y(), 255, 255, 255);
+
+  switch (tool) {
+    case 1:
+      drawLine(pressStart.x(), pressStart.y(), p.x(), p.y(), 255, 255, 255);
+      break;
+    case 2: {
+      // double radius = (pressStart - p).manhattanLength();
+      int a = (pressStart.x() - p.x());
+      int b = (pressStart.y() - p.y());
+      double radius = sqrt((a * a) + (b * b));
+      drawCircle(pressStart.x(), pressStart.y(), radius, 255, 255, 255);
+    } break;
+    default:
+      break;
+  }
 
   update();
 }

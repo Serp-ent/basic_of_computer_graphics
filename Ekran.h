@@ -17,6 +17,12 @@ protected:
   void mouseMoveEvent(QMouseEvent* event) override;
   void
   drawLine(int x1, int y1, int x2, int y2, uint red, uint green, uint blue);
+  void drawCircle(int x0,
+                  int y0,
+                  double radius,
+                  uint red,
+                  uint green,
+                  uint blue);
 
 signals:
 
@@ -29,6 +35,7 @@ private:
   bool mousePresssed = false;
   QPoint pressStart;
   QImage canvasClone;
+  int tool = 2;
 };
 
 #endif // EKRAN_H
