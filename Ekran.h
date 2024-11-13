@@ -1,28 +1,34 @@
 #ifndef EKRAN_H
 #define EKRAN_H
 
+#include <QMouseEvent>
 #include <QObject>
 #include <QWidget>
-#include <QMouseEvent>
 
 class Ekran : public QWidget
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    explicit Ekran(QWidget *parent = nullptr);
-    QImage canvas;
-protected:
-    void paintEvent(QPaintEvent* event);
-    // void mouseMoveEvent(QMouseEvent* event);
-    void drawLine(int x1, int y1, int x2, int y2, uint red, uint green, uint blue);
+  explicit Ekran(QWidget* parent = nullptr);
+  QImage canvas;
 
+protected:
+  void paintEvent(QPaintEvent* event) override;
+  void mouseMoveEvent(QMouseEvent* event) override;
+  void
+  drawLine(int x1, int y1, int x2, int y2, uint red, uint green, uint blue);
 
 signals:
 
-    // QWidget interface
+  // QWidget interface
 protected:
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent* event) override;
+
+private:
+  bool mousePresssed = false;
+  QPoint pressStart;
+  QImage canvasClone;
 };
 
 #endif // EKRAN_H
