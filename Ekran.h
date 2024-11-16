@@ -24,6 +24,14 @@ protected:
                   uint green,
                   uint blue);
 
+  void drawEllipse(int x0,
+                   int y0,
+                   double a,
+                   double b,
+                   uint red,
+                   uint green,
+                   uint blue);
+
 signals:
 
   // QWidget interface
@@ -35,7 +43,7 @@ private:
   bool mousePresssed = false;
   QPoint pressStart;
   QImage canvasClone;
-  int tool = 2;
+  int tool = 3;
 };
 
 #endif // EKRAN_H

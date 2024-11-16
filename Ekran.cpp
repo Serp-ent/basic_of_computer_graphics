@@ -81,6 +81,49 @@ Ekran::drawCircle(int x0,
 }
 
 void
+Ekran::drawEllipse(int x0,
+                   int y0,
+                   double a,
+                   double b,
+                   uint red,
+                   uint green,
+                   uint blue)
+{
+  constexpr int n = 10;
+  constexpr double step = 2 * M_PI / n;
+
+  std::vector<std::pair<int, int>> points;
+
+  double alpha = 0;
+  while (alpha < 2 * M_PI) {
+    double x = a * std::cos(alpha);
+    double y = b * std::sin(alpha);
+
+    points.push_back({ x0 + int(x), y0 + int(y) });
+
+    alpha += step;
+  }
+
+  for (int i = 0; i < points.size() - 1; ++i) {
+    drawLine(points[i].first,
+             points[i].second,
+             points[i + 1].first,
+             points[i + 1].second,
+             red,
+             green,
+             blue);
+  }
+
+  drawLine(points.front().first,
+           points.front().second,
+           points.back().first,
+           points.back().second,
+           red,
+           green,
+           blue);
+}
+
+void
 Ekran::mousePressEvent(QMouseEvent* event)
 {
   mousePresssed = true;
@@ -126,11 +169,15 @@ Ekran::mouseMoveEvent(QMouseEvent* event)
       drawLine(pressStart.x(), pressStart.y(), p.x(), p.y(), 255, 255, 255);
       break;
     case 2: {
-      // double radius = (pressStart - p).manhattanLength();
       int a = (pressStart.x() - p.x());
       int b = (pressStart.y() - p.y());
       double radius = sqrt((a * a) + (b * b));
       drawCircle(pressStart.x(), pressStart.y(), radius, 255, 255, 255);
+    } break;
+    case 3: {
+      int a = (pressStart.x() - p.x());
+      int b = (pressStart.y() - p.y());
+      drawEllipse(pressStart.x(), pressStart.y(), a, b, 255, 255, 255);
     } break;
     default:
       break;
