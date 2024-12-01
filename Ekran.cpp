@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "movablepoint.h"
+#include <algorithm>
 #include <tools.h>
 
 void
@@ -12,7 +13,10 @@ Ekran::mousePressEvent(QMouseEvent* event)
   mousePresssed = true;
   pressStart = event->pos();
 
-  if (tool == 4 && (event->button() == Qt::LeftButton)) {
+  if (tool != 4)
+    return;
+
+  if (event->button() == Qt::LeftButton) {
     QPoint p = event->pos();
     bool pointNearby = false;
     // check if there is point nearby
@@ -40,10 +44,47 @@ Ekran::mousePressEvent(QMouseEvent* event)
         for (const auto& point : points) {
           point.draw(this->canvas);
         }
+
+        if (points.size() == 4) {
+          drawBezier(this->canvas,
+                     points.at(0),
+                     points.at(1),
+                     points.at(2),
+                     points.at(3),
+                     20);
+        }
       }
 
       update();
     }
+  } else if (event->button() == Qt::RightButton) {
+    QPoint p = event->pos();
+
+    auto it =
+      std::find_if(points.begin(), points.end(), [&](const QPoint& current) {
+        return euclideanSquare(p, current) <=
+               MovablePoint::POINT_RADIUS * MovablePoint::POINT_RADIUS;
+      });
+
+    if (it != points.end())
+      points.erase(it);
+
+    // redraw
+    canvas.fill(Qt::black); // Clear canvas with black
+    for (const auto& point : points) {
+      point.draw(this->canvas);
+    }
+
+    if (points.size() == 4) {
+      drawBezier(this->canvas,
+                 points.at(0),
+                 points.at(1),
+                 points.at(2),
+                 points.at(3),
+                 20);
+    }
+
+    update();
   }
 
   canvasClone = canvas.copy();
@@ -124,13 +165,15 @@ Ekran::mouseMoveEvent(QMouseEvent* event)
           bool currentlyMoved = (selectedPoint == &point);
           point.draw(this->canvas, currentlyMoved);
         }
-      } else if (points.size() == 4) {
+      }
+
+      if (points.size() == 4) {
         drawBezier(this->canvas,
                    points.at(0),
                    points.at(1),
                    points.at(2),
                    points.at(3),
-                   10);
+                   20);
       }
     }
     default:
