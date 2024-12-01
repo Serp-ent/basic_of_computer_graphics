@@ -11,11 +11,15 @@ CONFIG += c++17
 SOURCES += \
     Ekran.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    movablepoint.cpp \
+    tools.cpp
 
 HEADERS += \
     Ekran.h \
-    mainwindow.h
+    mainwindow.h \
+    movablepoint.h \
+    tools.h
 
 FORMS += \
     mainwindow.ui

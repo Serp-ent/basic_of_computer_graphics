@@ -1,6 +1,7 @@
 #ifndef EKRAN_H
 #define EKRAN_H
 
+#include "movablepoint.h"
 #include <QMouseEvent>
 #include <QObject>
 #include <QWidget>
@@ -15,24 +16,6 @@ public:
 protected:
   void paintEvent(QPaintEvent* event) override;
   void mouseMoveEvent(QMouseEvent* event) override;
-  void
-  drawLine(int x1, int y1, int x2, int y2, uint red, uint green, uint blue);
-  void drawCircle(int x0,
-                  int y0,
-                  double radius,
-                  uint red,
-                  uint green,
-                  uint blue);
-
-  void drawEllipse(int x0,
-                   int y0,
-                   double a,
-                   double b,
-                   uint red,
-                   uint green,
-                   uint blue);
-
-  void drawBezier(QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N);
 
 signals:
 
@@ -45,7 +28,11 @@ private:
   bool mousePresssed = false;
   QPoint pressStart;
   QImage canvasClone;
+
+  // Bezier
+  QPoint* selectedPoint = nullptr;
   int tool = 4;
+  std::vector<MovablePoint> points;
 };
 
 #endif // EKRAN_H
