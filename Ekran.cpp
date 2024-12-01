@@ -30,12 +30,16 @@ Ekran::mousePressEvent(QMouseEvent* event)
       // if so catch him and change its border color to green (active)
       // TODO: currently do nothing
     } else {
-      points.push_back({ p.x(), p.y() });
+      if (points.size() == 4) {
+        // pass // do nothing // limit to 4 currently
+      } else {
+        points.push_back({ p.x(), p.y() });
 
-      // TODO: there is redraw fix that
-      canvas.fill(Qt::black); // Clear canvas with black
-      for (const auto& point : points) {
-        point.draw(this->canvas);
+        // TODO: there is redraw fix that
+        canvas.fill(Qt::black); // Clear canvas with black
+        for (const auto& point : points) {
+          point.draw(this->canvas);
+        }
       }
 
       update();
@@ -120,8 +124,14 @@ Ekran::mouseMoveEvent(QMouseEvent* event)
           bool currentlyMoved = (selectedPoint == &point);
           point.draw(this->canvas, currentlyMoved);
         }
+      } else if (points.size() == 4) {
+        drawBezier(this->canvas,
+                   points.at(0),
+                   points.at(1),
+                   points.at(2),
+                   points.at(3),
+                   10);
       }
-      // drawBezier();
     }
     default:
       break;

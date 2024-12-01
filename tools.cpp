@@ -2,7 +2,9 @@
 #include <QImage>
 #include <QPoint>
 #include <cmath>
+#include <qdebug.h>
 
+#include <algorithm>
 #include <tools.h>
 
 double
@@ -147,7 +149,44 @@ drawEllipse(QImage& canvas,
            blue);
 }
 
+double
+bezier_3(double t, double p0, double p1, double p2, double p3)
+{
+  double term0 = std::pow(1 - t, 3) * p0;
+  double term1 = 3 * std::pow(1 - t, 2) * t * p1;
+  double term2 = 3 * (1 - t) * std::pow(t, 2) * p2;
+  double term3 = std::pow(t, 3) * p3;
+
+  return term0 + term1 + term2 + term3;
+}
+
+double
+horner(double x, std::vector<double> a)
+{
+  double v = a[0];
+  for (int k = 1; k < a.size(); ++k) {
+    v = a[k] + x * v;
+  }
+
+  return v;
+}
+
 void
 drawBezier(QImage& canvas, QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N)
 {
+  for (int i = 0; i < N; ++i) {
+    const double t = i / (double)N;
+    const double t_next = (i + 1) / (double)N;
+
+    int x1 = bezier_3(t, p1.x(), p2.x(), p3.x(), p4.x());
+    int y1 = bezier_3(t, p1.y(), p2.y(), p3.y(), p4.y());
+    int x2 = bezier_3(t_next, p1.x(), p2.x(), p3.x(), p4.x());
+    int y2 = bezier_3(t_next, p1.y(), p2.y(), p3.y(), p4.y());
+
+    if (i == 0)
+      qDebug() << "(" << x1 << ", " << y1 << ") -> (" << x2 << ", " << y2
+               << ")\n";
+
+    drawLine(canvas, x1, y1, x2, y2, 255, 255, 255);
+  }
 }

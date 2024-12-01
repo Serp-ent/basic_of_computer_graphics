@@ -45,4 +45,9 @@ drawEllipse(QImage& canvas,
 void
 drawBezier(QImage& canvas, QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N);
 
+double
+horner(double x, std::vector<double> a);
+double
+bezier_3(double t, double x);
+
 #endif // TOOLS_H
