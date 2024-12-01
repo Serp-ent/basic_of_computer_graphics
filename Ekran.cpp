@@ -124,10 +124,26 @@ Ekran::drawEllipse(int x0,
 }
 
 void
+Ekran::drawBezier(QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N)
+{
+}
+
+void
 Ekran::mousePressEvent(QMouseEvent* event)
 {
   mousePresssed = true;
   pressStart = event->pos();
+
+  if (tool == 4 && (event->button() == Qt::LeftButton)) {
+    // check if there is no point nearby
+    constexpr int point_radius = 4;
+    QPoint p = event->pos();
+    drawPixel(&this->canvas, p.x(), p.y(), 255, 255, 255);
+    drawCircle(p.x(), p.y(), point_radius, 255, 0, 0);
+
+    update();
+  }
+
   canvasClone = canvas.copy();
 }
 
@@ -179,6 +195,9 @@ Ekran::mouseMoveEvent(QMouseEvent* event)
       int b = (pressStart.y() - p.y());
       drawEllipse(pressStart.x(), pressStart.y(), a, b, 255, 255, 255);
     } break;
+    case 4: {
+      // drawBezier();
+    }
     default:
       break;
   }
