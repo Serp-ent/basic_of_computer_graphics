@@ -2,6 +2,7 @@
 #include <QImage>
 #include <QPoint>
 #include <cmath>
+#include <stack>
 #include <qdebug.h>
 
 #include <algorithm>
@@ -254,3 +255,36 @@ void drawBezier(QImage& canvas, std::vector<MovablePoint>& points) {
         }
     }
 }
+
+void flood_fill(QImage& canvas, QPoint p, QColor from, QColor to) {
+    std::stack<QPoint> points;
+    if (canvas.pixelColor(p) != from)
+        return;
+    points.push(p);
+
+    while (!points.empty()) {
+        QPoint v = points.top();
+        points.pop();
+
+        if (canvas.pixelColor(v) == from) {
+            int w = v.x();
+            int e = v.x();
+
+            while (canvas.pixelColor(w, v.y()) == from) --w;
+            while (canvas.pixelColor(e, v.y()) == from) ++e;
+
+            for (int i = w+1; i < e; ++i)
+                drawPixel(canvas, i, v.y(), to.red(), to.green(), to.blue());
+
+            for (int i = w+1; i < e; ++i) {
+                if (canvas.pixelColor(i, v.y() +1) == from)
+                    points.emplace(i, v.y() +1);
+                if (canvas.pixelColor(i, v.y() -1) == from)
+                    points.emplace(i, v.y() -1);
+            }
+        }
+    }
+
+    qDebug() << "Filled using flood_fill\n";
+}
+

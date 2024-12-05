@@ -13,6 +13,12 @@ Ekran::mousePressEvent(QMouseEvent* event)
   mousePresssed = true;
   pressStart = event->pos();
 
+  if (event->button() == Qt::MiddleButton) {
+      flood_fill(this->canvas, event->pos(), Qt::black, Qt::white);
+      update();
+      return;
+  }
+
   if (tool != 4) {
     canvasClone = canvas.copy();
     return;

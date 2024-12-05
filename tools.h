@@ -52,4 +52,6 @@ horner(double x, std::vector<double> a);
 double
 bezier_3(double t, double x);
 
+void flood_fill(QImage& canvas, QPoint p, QColor from, QColor to);
+
 #endif // TOOLS_H
