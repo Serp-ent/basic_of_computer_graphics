@@ -13,8 +13,10 @@ Ekran::mousePressEvent(QMouseEvent* event)
   mousePresssed = true;
   pressStart = event->pos();
 
-  if (tool != 4)
+  if (tool != 4) {
+    canvasClone = canvas.copy();
     return;
+  }
 
   if (event->button() == Qt::LeftButton) {
     QPoint p = event->pos();
@@ -84,9 +86,11 @@ Ekran::paintEvent(QPaintEvent* event)
   p.fillRect(0, 0, width(), height(), Qt::black);
   p.drawImage(0, 0, canvas);
 
-  // there should be draw points;
-  for (const auto& p : points) {
-    p.draw(this->canvas);
+  if (this->tool == 4) {
+      // there should be draw points;
+      for (const auto& p : points) {
+          p.draw(this->canvas);
+      }
   }
 }
 
