@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <tools.h>
+#include "movablepoint.h"
 
 double
 euclideanSquare(QPoint start, QPoint end)
@@ -172,7 +173,7 @@ horner(double x, std::vector<double> a)
 }
 
 void
-drawBezier(QImage& canvas, QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N)
+drawBezierCurve(QImage& canvas, QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N)
 {
   for (int i = 0; i < N; ++i) {
     const double t = i / (double)N;
@@ -183,10 +184,73 @@ drawBezier(QImage& canvas, QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N)
     int x2 = bezier_3(t_next, p1.x(), p2.x(), p3.x(), p4.x());
     int y2 = bezier_3(t_next, p1.y(), p2.y(), p3.y(), p4.y());
 
-    if (i == 0)
-      qDebug() << "(" << x1 << ", " << y1 << ") -> (" << x2 << ", " << y2
-               << ")\n";
-
     drawLine(canvas, x1, y1, x2, y2, 255, 255, 255);
   }
+}
+
+void drawBezier(QImage& canvas, std::vector<MovablePoint>& points) {
+    // redraw
+    canvas.fill(Qt::black); // Clear canvas with black
+    for (const auto& point : points) {
+        point.draw(canvas);
+    }
+
+    if (points.size() >= 4) {
+        constexpr int firstCurveCount = 4;
+
+        // Draw control point lines for the first curve
+        drawLine(canvas,
+                 points.at(0).x(),
+                 points.at(0).y(),
+                 points.at(1).x(),
+                 points.at(1).y(),
+                 0,
+                 128,
+                 128);
+        drawLine(canvas,
+                 points.at(2).x(),
+                 points.at(2).y(),
+                 points.at(3).x(),
+                 points.at(3).y(),
+                 0,
+                 128,
+                 128);
+
+        drawBezierCurve(canvas,
+                        points.at(0),
+                        points.at(1),
+                        points.at(2),
+                        points.at(3),
+                        20);
+
+        // 3 for every curve needed because we already have start one
+        int additionalCurves = (points.size() - firstCurveCount) / 3;
+        for (int i = 0; i < additionalCurves; ++i) {
+            int base = i * 3 + 3; // start after first curve
+
+            drawLine(canvas,
+                     points.at(base).x(),
+                     points.at(base).y(),
+                     points.at(base + 1).x(),
+                     points.at(base + 1).y(),
+                     0,
+                     128,
+                     128); // Example: gray line
+            drawLine(canvas,
+                     points.at(base + 2).x(),
+                     points.at(base + 2).y(),
+                     points.at(base + 3).x(),
+                     points.at(base + 3).y(),
+                     0,
+                     128,
+                     128); // Example: gray line
+
+            drawBezierCurve(canvas,
+                            points.at(base),
+                            points.at(base + 1),
+                            points.at(base + 2),
+                            points.at(base + 3),
+                            20);
+        }
+    }
 }

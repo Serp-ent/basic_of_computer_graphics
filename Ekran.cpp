@@ -36,70 +36,7 @@ Ekran::mousePressEvent(QMouseEvent* event)
     } else {
       points.push_back({ p.x(), p.y() });
 
-      // TODO: there is redraw fix that
-      canvas.fill(Qt::black); // Clear canvas with black
-      for (const auto& point : points) {
-        point.draw(this->canvas);
-      }
-
-      if (points.size() >= 4) {
-        constexpr int firstCurveCount = 4;
-
-        // Draw control point lines for the first curve
-        drawLine(this->canvas,
-                 points.at(0).x(),
-                 points.at(0).y(),
-                 points.at(1).x(),
-                 points.at(1).y(),
-                 0,
-                 128,
-                 128);
-        drawLine(this->canvas,
-                 points.at(2).x(),
-                 points.at(2).y(),
-                 points.at(3).x(),
-                 points.at(3).y(),
-                 0,
-                 128,
-                 128);
-
-        drawBezier(this->canvas,
-                   points.at(0),
-                   points.at(1),
-                   points.at(2),
-                   points.at(3),
-                   20);
-
-        // 3 for every curve needed because we already have start one
-        int additionalCurves = (points.size() - firstCurveCount) / 3;
-        for (int i = 0; i < additionalCurves; ++i) {
-          int base = i * 3 + 3; // start after first curve
-
-          drawLine(this->canvas,
-                   points.at(base).x(),
-                   points.at(base).y(),
-                   points.at(base + 1).x(),
-                   points.at(base + 1).y(),
-                   0,
-                   128,
-                   128); // Example: gray line
-          drawLine(this->canvas,
-                   points.at(base + 2).x(),
-                   points.at(base + 2).y(),
-                   points.at(base + 3).x(),
-                   points.at(base + 3).y(),
-                   0,
-                   128,
-                   128); // Example: gray line
-
-          drawBezier(this->canvas,
-                     points.at(base),
-                     points.at(base + 1),
-                     points.at(base + 2),
-                     points.at(base + 3),
-                     20);
-        }
-      }
+      drawBezier(this->canvas, points);
 
       update();
     }
@@ -115,70 +52,7 @@ Ekran::mousePressEvent(QMouseEvent* event)
     if (it != points.end())
       points.erase(it);
 
-    // redraw
-    canvas.fill(Qt::black); // Clear canvas with black
-    for (const auto& point : points) {
-      point.draw(this->canvas);
-    }
-
-    if (points.size() >= 4) {
-      constexpr int firstCurveCount = 4;
-
-      // Draw control point lines for the first curve
-      drawLine(this->canvas,
-               points.at(0).x(),
-               points.at(0).y(),
-               points.at(1).x(),
-               points.at(1).y(),
-               0,
-               128,
-               128);
-      drawLine(this->canvas,
-               points.at(2).x(),
-               points.at(2).y(),
-               points.at(3).x(),
-               points.at(3).y(),
-               0,
-               128,
-               128);
-
-      drawBezier(this->canvas,
-                 points.at(0),
-                 points.at(1),
-                 points.at(2),
-                 points.at(3),
-                 20);
-
-      // 3 for every curve needed because we already have start one
-      int additionalCurves = (points.size() - firstCurveCount) / 3;
-      for (int i = 0; i < additionalCurves; ++i) {
-        int base = i * 3 + 3; // start after first curve
-
-        drawLine(this->canvas,
-                 points.at(base).x(),
-                 points.at(base).y(),
-                 points.at(base + 1).x(),
-                 points.at(base + 1).y(),
-                 0,
-                 128,
-                 128); // Example: gray line
-        drawLine(this->canvas,
-                 points.at(base + 2).x(),
-                 points.at(base + 2).y(),
-                 points.at(base + 3).x(),
-                 points.at(base + 3).y(),
-                 0,
-                 128,
-                 128); // Example: gray line
-
-        drawBezier(this->canvas,
-                   points.at(base),
-                   points.at(base + 1),
-                   points.at(base + 2),
-                   points.at(base + 3),
-                   20);
-      }
-    }
+    drawBezier(this->canvas, points);
     update();
   }
 
@@ -262,64 +136,7 @@ Ekran::mouseMoveEvent(QMouseEvent* event)
         }
       }
 
-      if (points.size() >= 4) {
-        constexpr int firstCurveCount = 4;
-
-        // Draw control point lines for the first curve
-        drawLine(this->canvas,
-                 points.at(0).x(),
-                 points.at(0).y(),
-                 points.at(1).x(),
-                 points.at(1).y(),
-                 0,
-                 128,
-                 128);
-        drawLine(this->canvas,
-                 points.at(2).x(),
-                 points.at(2).y(),
-                 points.at(3).x(),
-                 points.at(3).y(),
-                 0,
-                 128,
-                 128);
-
-        drawBezier(this->canvas,
-                   points.at(0),
-                   points.at(1),
-                   points.at(2),
-                   points.at(3),
-                   20);
-
-        // 3 for every curve needed because we already have start one
-        int additionalCurves = (points.size() - firstCurveCount) / 3;
-        for (int i = 0; i < additionalCurves; ++i) {
-          int base = i * 3 + 3; // start after first curve
-
-          drawLine(this->canvas,
-                   points.at(base).x(),
-                   points.at(base).y(),
-                   points.at(base + 1).x(),
-                   points.at(base + 1).y(),
-                   0,
-                   128,
-                   128); // Example: gray line
-          drawLine(this->canvas,
-                   points.at(base + 2).x(),
-                   points.at(base + 2).y(),
-                   points.at(base + 3).x(),
-                   points.at(base + 3).y(),
-                   0,
-                   128,
-                   128); // Example: gray line
-
-          drawBezier(this->canvas,
-                     points.at(base),
-                     points.at(base + 1),
-                     points.at(base + 2),
-                     points.at(base + 3),
-                     20);
-        }
-      }
+      drawBezier(this->canvas, points);
     }
     default:
       break;
