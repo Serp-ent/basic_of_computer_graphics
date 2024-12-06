@@ -270,16 +270,18 @@ void flood_fill(QImage& canvas, QPoint p, QColor from, QColor to) {
             int w = v.x();
             int e = v.x();
 
-            while (canvas.pixelColor(w, v.y()) == from) --w;
-            while (canvas.pixelColor(e, v.y()) == from) ++e;
+            while (w > 0 && canvas.pixelColor(w, v.y()) == from) --w;
+            while (e < canvas.width() && canvas.pixelColor(e, v.y()) == from) ++e;
 
-            for (int i = w+1; i < e; ++i)
+            for (int i = w+1; i < e; ++i) // draw horizontal line
                 drawPixel(canvas, i, v.y(), to.red(), to.green(), to.blue());
 
             for (int i = w+1; i < e; ++i) {
-                if (canvas.pixelColor(i, v.y() +1) == from)
+                // add to up
+                if (v.y() + 1 < canvas.height() && canvas.pixelColor(i, v.y() +1) == from)
                     points.emplace(i, v.y() +1);
-                if (canvas.pixelColor(i, v.y() -1) == from)
+                // add to down
+                if (v.y() > 0 && canvas.pixelColor(i, v.y() -1) == from)
                     points.emplace(i, v.y() -1);
             }
         }
