@@ -75,12 +75,12 @@ Ekran::mousePressEvent(QMouseEvent* event)
       points.push_back(event->pos());
       drawPixel(
         this->canvas, event->pos().x(), event->pos().y(), 255, 255, 255);
-
+    } else if (event->button() == Qt::RightButton) {
+      qDebug() << "scan_line\n";
       scan_line(this->canvas, points);
-
-      update();
     }
 
+    update();
     canvasClone = canvas.copy();
   }
 }
