@@ -1,9 +1,9 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include "movablepoint.h"
 #include <QImage>
 #include <QPoint>
-#include "movablepoint.h"
 
 double
 euclideanSquare(QPoint start, QPoint end);
@@ -44,14 +44,24 @@ drawEllipse(QImage& canvas,
             uint blue);
 
 void
-drawBezierCurve(QImage& canvas, QPoint p1, QPoint p2, QPoint p3, QPoint p4, int N);
-void drawBezier(QImage& canvas, std::vector<MovablePoint>& points);
+drawBezierCurve(QImage& canvas,
+                QPoint p1,
+                QPoint p2,
+                QPoint p3,
+                QPoint p4,
+                int N);
+void
+drawBezier(QImage& canvas, std::vector<MovablePoint>& points);
 
 double
 horner(double x, std::vector<double> a);
 double
 bezier_3(double t, double x);
 
-void flood_fill(QImage& canvas, QPoint p, QColor from, QColor to);
+void
+flood_fill(QImage& canvas, QPoint p, QColor from, QColor to);
+
+void
+scan_line(QImage& canvas, const std::vector<QPoint>& points);
 
 #endif // TOOLS_H

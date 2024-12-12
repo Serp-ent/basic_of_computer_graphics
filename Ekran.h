@@ -28,11 +28,14 @@ private:
   bool mousePresssed = false;
   QPoint pressStart;
   QImage canvasClone;
+  int tool = 5;
 
   // Bezier
   QPoint* selectedPoint = nullptr;
-  int tool = 4;
-  std::vector<MovablePoint> points;
+  // std::vector<MovablePoint> points;
+
+  // scan line
+  std::vector<QPoint> points;
 };
 
 #endif // EKRAN_H
