@@ -78,6 +78,7 @@ Ekran::mousePressEvent(QMouseEvent* event)
     } else if (event->button() == Qt::RightButton) {
       qDebug() << "scan_line\n";
       scan_line(this->canvas, points);
+      points.clear();
     }
 
     update();
