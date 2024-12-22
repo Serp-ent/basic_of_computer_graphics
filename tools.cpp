@@ -1,6 +1,7 @@
 
 #include <QImage>
 #include <QPoint>
+#include <QRgb>
 #include <cmath>
 #include <qdebug.h>
 #include <stack>
@@ -344,6 +345,34 @@ scan_line(QImage& canvas, const std::vector<QPoint>& points)
           drawPixel(canvas, x, y, 255, 255, 255);
         }
       }
+    }
+  }
+}
+
+QRgb
+normalMode(QRgb f, QRgb b)
+{
+}
+
+void
+blend(const QImage& background,
+      const QImage& foreground,
+      float alpha,
+      int mode,
+      QImage& out)
+{
+  // iterate over all pixels
+  for (int y = 0; y < background.height(); ++y) {
+    for (int x = 0; x < background.width(); ++x) {
+      QRgb c;
+      if (mode == 0) {
+        //   uchar c = f[mode](background[i], foreground[i]);
+        c = normalMode(background.pixel(x, y), foreground.pixel(x, y));
+      }
+
+      //   out[i] = alpha * c + (1 - a) background[i];
+      QRgb result = alpha * c + (1 - alpha) * background.pixel(x, y);
+      out.setPixel(x, y, c);
     }
   }
 }

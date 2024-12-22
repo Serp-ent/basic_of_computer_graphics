@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     Ekran.cpp \
+    layer.cpp \
     main.cpp \
     mainwindow.cpp \
     movablepoint.cpp \
@@ -17,6 +18,7 @@ SOURCES += \
 
 HEADERS += \
     Ekran.h \
+    layer.h \
     mainwindow.h \
     movablepoint.h \
     tools.h
@@ -28,3 +30,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resourceFile.qrc

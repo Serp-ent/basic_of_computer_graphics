@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>wilkizajac.jpg</file>
+        <file>room.jpg</file>
+    </qresource>
+</RCC>

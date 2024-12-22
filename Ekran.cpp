@@ -3,7 +3,10 @@
 #include <QPainter>
 #include <cmath>
 
+#include "layer.h"
 #include "movablepoint.h"
+#include <QImage>
+#include <QLabel>
 #include <algorithm>
 #include <tools.h>
 
@@ -13,16 +16,16 @@ Ekran::mousePressEvent(QMouseEvent* event)
   mousePresssed = true;
   pressStart = event->pos();
 
-  if (event->button() == Qt::MiddleButton) {
-    flood_fill(this->canvas, event->pos(), Qt::black, Qt::white);
-    update();
-    return;
-  }
+  // if (event->button() == Qt::MiddleButton) {
+  //   flood_fill(this->canvas, event->pos(), Qt::black, Qt::white);
+  //   update();
+  //   return;
+  // }
 
-  if (tool < 4) {
-    canvasClone = canvas.copy();
-    return;
-  }
+  // if (tool < 4) {
+  //   canvasClone = canvas.copy();
+  //   return;
+  // }
 
   /* if (tool == 4) {
      if (event->button() == Qt::LeftButton) {
@@ -68,22 +71,22 @@ Ekran::mousePressEvent(QMouseEvent* event)
      canvasClone = canvas.copy();
    } else*/
 
-  if (tool == 5) {
-    if (event->button() == Qt::LeftButton) {
+  // if (tool == 5) {
+  //   if (event->button() == Qt::LeftButton) {
 
-      qDebug() << "point added\n";
-      points.push_back(event->pos());
-      drawPixel(
-        this->canvas, event->pos().x(), event->pos().y(), 255, 255, 255);
-    } else if (event->button() == Qt::RightButton) {
-      qDebug() << "scan_line\n";
-      scan_line(this->canvas, points);
-      points.clear();
-    }
+  //     qDebug() << "point added\n";
+  //     points.push_back(event->pos());
+  //     drawPixel(
+  //       this->canvas, event->pos().x(), event->pos().y(), 255, 255, 255);
+  //   } else if (event->button() == Qt::RightButton) {
+  //     qDebug() << "scan_line\n";
+  //     scan_line(this->canvas, points);
+  //     points.clear();
+  //   }
 
-    update();
-    canvasClone = canvas.copy();
-  }
+  //   update();
+  //   canvasClone = canvas.copy();
+  // }
 }
 
 void
@@ -99,9 +102,45 @@ Ekran::Ekran(QWidget* parent)
   : QWidget{ parent }
 {
   setMouseTracking(true);
+  this->resize(1000, 600);
 
-  canvas = QImage(this->width(), this->height(), QImage::Format_RGB32);
+  canvas = QImage(640, 480, QImage::Format_RGB32);
   canvas.fill(0);
+
+  layers.push_back(
+    Layer(QImage(":/images/wilkizajac.jpg"), 1, 1, "Wilk_i_zajac"));
+  layers.push_back(Layer(QImage(":/images/room.jpg"), 1, 1, "room"));
+
+  for (const auto& l : layers) {
+    // make sure that all the images are open
+    if (l.getImage().isNull()) {
+      throw new std::runtime_error("Cannot load image");
+    }
+  }
+
+  // alpha slider setup
+  alphaSlider = new QSlider(Qt::Horizontal, this);
+  alphaSlider->setRange(0, 100);
+  alphaSlider->setValue(100);
+  alphaSlider->setGeometry(width() - 200 - 10, 10, 200, 30);
+  // TODO: conect to invoke action
+  connect(alphaSlider, &QSlider::valueChanged, this, &Ekran::updateAlpha);
+  alphaLabel = new QLabel(this);
+  // TODO: change label on fly
+  alphaLabel->setText("Alpha: 100%");
+  alphaLabel->setGeometry(alphaSlider->x() - 100, alphaSlider->y(), 90, 30);
+  alphaLabel->setAlignment(Qt::AlignRight | Qt::AlignCenter);
+
+  // layer list setup
+  layerList = new QListWidget(this);
+  layerList->setGeometry(alphaLabel->x(),
+                         alphaLabel->y() + 40,
+                         alphaSlider->width() + alphaLabel->width(),
+                         height() - alphaSlider->height() - 40);
+  layerList->setSelectionMode(QAbstractItemView::SingleSelection);
+  for (const auto& l : layers) {
+    layerList->addItem(l.getName());
+  }
 }
 
 void
@@ -110,6 +149,17 @@ Ekran::paintEvent(QPaintEvent* event)
   QPainter p(this);
   p.fillRect(0, 0, width(), height(), Qt::black);
   p.drawImage(0, 0, canvas);
+
+  // TODO: maybe use reverse iterators
+  // TOOL 6 -> Alpha blending
+  for (int i = layers.size() - 1; i >= 0; --i) {
+    // TODO: invoke blend function
+    // TODO: blend(img, layers[i], alpha, mode[i], save into img)
+    // doblendowywac do img
+    // img jest jako background, a aktualna warstwa jako foreground
+    p.drawImage(0, 0, layers.at(i).getImage());
+  }
+  update();
 
   // if (this->tool == 4) {
   //   // there should be draw points;
@@ -125,7 +175,7 @@ Ekran::mouseMoveEvent(QMouseEvent* event)
   if (!mousePresssed) {
     return;
   }
-  canvas = canvasClone;
+  // canvas = canvasClone;
 
   QPoint p = event->pos();
 

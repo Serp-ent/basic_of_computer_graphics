@@ -64,4 +64,11 @@ flood_fill(QImage& canvas, QPoint p, QColor from, QColor to);
 void
 scan_line(QImage& canvas, const std::vector<QPoint>& points);
 
+void
+blend(const QImage& background,
+      const QImage& foreground,
+      float alpha,
+      int mode,
+      QImage& result);
+
 #endif // TOOLS_H
