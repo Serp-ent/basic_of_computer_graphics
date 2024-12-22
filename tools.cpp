@@ -349,9 +349,24 @@ scan_line(QImage& canvas, const std::vector<QPoint>& points)
   }
 }
 
+// TODO:
+// multiply mode
+// screen mode
+// overlay mode
+// lighteen mode
+// darkeen mode
 QRgb
 normalMode(QRgb f, QRgb b)
 {
+  return b;
+}
+
+uchar
+blend_function(uchar a, uchar b, float alpha)
+{
+  // b is foreground
+  // a is background
+  return alpha * b + (1 - alpha) * a;
 }
 
 void
@@ -364,15 +379,20 @@ blend(const QImage& background,
   // iterate over all pixels
   for (int y = 0; y < background.height(); ++y) {
     for (int x = 0; x < background.width(); ++x) {
-      QRgb c;
-      if (mode == 0) {
-        //   uchar c = f[mode](background[i], foreground[i]);
-        c = normalMode(background.pixel(x, y), foreground.pixel(x, y));
-      }
+      QRgb c = normalMode(background.pixel(x, y), foreground.pixel(x, y));
+      // TODO: handle multiple blend modes if (mode == 0) etc...
+      //   uchar c = f[mode](background[i], foreground[i]);
+
+      // do it for red
+      QRgb bpixel = background.pixel(x, y);
+      uchar r = blend_function(qRed(c), qRed(bpixel), alpha);
+      uchar g = blend_function(qGreen(c), qGreen(bpixel), alpha);
+      uchar b = blend_function(qBlue(c), qBlue(bpixel), alpha);
+      // do it for green
 
       //   out[i] = alpha * c + (1 - a) background[i];
-      QRgb result = alpha * c + (1 - alpha) * background.pixel(x, y);
-      out.setPixel(x, y, c);
+      QRgb result = qRgb(r, g, b);
+      out.setPixel(x, y, result);
     }
   }
 }

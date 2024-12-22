@@ -108,8 +108,8 @@ Ekran::Ekran(QWidget* parent)
   canvas.fill(0);
 
   layers.push_back(
-    Layer(QImage(":/images/wilkizajac.jpg"), 1, 1, "Wilk_i_zajac"));
-  layers.push_back(Layer(QImage(":/images/room.jpg"), 1, 1, "room"));
+    Layer(QImage(":/images/wilkizajac.jpg"), 0.5, 1, "Wilk_i_zajac"));
+  layers.push_back(Layer(QImage(":/images/room.jpg"), 0.5, 1, "room"));
 
   for (const auto& l : layers) {
     // make sure that all the images are open
@@ -141,6 +141,14 @@ Ekran::Ekran(QWidget* parent)
   for (const auto& l : layers) {
     layerList->addItem(l.getName());
   }
+  connect(layerList,
+          &QListWidget::itemSelectionChanged,
+          this,
+          &Ekran::onLayerSelectionChanged);
+
+  if (layerList->count() > 0) {
+    layerList->setCurrentRow(0); // Select the first item (index 0)
+  };
 }
 
 void
@@ -148,7 +156,10 @@ Ekran::paintEvent(QPaintEvent* event)
 {
   QPainter p(this);
   p.fillRect(0, 0, width(), height(), Qt::black);
+
   p.drawImage(0, 0, canvas);
+
+  QImage blendedCanvas = canvas; // create copy of canvas
 
   // TODO: maybe use reverse iterators
   // TOOL 6 -> Alpha blending
@@ -157,8 +168,19 @@ Ekran::paintEvent(QPaintEvent* event)
     // TODO: blend(img, layers[i], alpha, mode[i], save into img)
     // doblendowywac do img
     // img jest jako background, a aktualna warstwa jako foreground
-    p.drawImage(0, 0, layers.at(i).getImage());
+    const Layer& layer = layers.at(i);
+    QImage layerImage = layer.getImage();
+    float alpha = layer.getAlpha();
+    // Blend current layer image with the blended canvas
+    blend(blendedCanvas,
+          layerImage,
+          alpha,
+          -1,
+          blendedCanvas); // Update blendedCanvas with the result
   }
+
+  p.drawImage(0, 0, blendedCanvas);
+
   update();
 
   // if (this->tool == 4) {

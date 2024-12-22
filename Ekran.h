@@ -48,10 +48,46 @@ private:
   QSlider* alphaSlider; // TODO: read slider values form layers
   QLabel* alphaLabel;
   QListWidget* layerList;
-  void updateAlpha(float value)
+  void updateAlpha(int value)
   {
-    qDebug() << "update alpha to " << value << '\n';
-    // TODO: maybe invoke update here
+    float alpha = value / 100.0f;
+
+    QListWidgetItem* selectedItem = layerList->currentItem();
+    if (selectedItem) {
+      QString layerName = selectedItem->text();
+      for (auto& l : layers) {
+        if (l.getName() == layerName) {
+          l.setAlpha(alpha);
+          break;
+        }
+      }
+    }
+
+    alphaLabel->setText(
+      QString("Alpha: %1").arg(alpha, 0, 'f', 2)); // Update label
+  }
+
+  void onLayerSelectionChanged()
+  {
+    // Get the selected item
+    QListWidgetItem* selectedItem = layerList->currentItem();
+    if (selectedItem) {
+      QString layerName = selectedItem->text();
+
+      // Find the layer with the same name and set the alpha slider value based
+      // on that layer's alpha
+      for (auto& l : layers) {
+        if (l.getName() == layerName) {
+          float alpha = l.getAlpha();
+          alphaSlider->setValue(
+            static_cast<int>(alpha * 100)); // Set slider value (0 to 100)
+
+          alphaLabel->setText(
+            QString("Alpha: %1").arg(alpha, 0, 'f', 2)); // Update label
+          break;
+        }
+      }
+    }
   }
 };
 

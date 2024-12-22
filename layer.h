@@ -12,10 +12,14 @@ public:
     , mode(mode)
     , name(std::move(name))
   {
+    setAlpha(alpha);
   }
 
   QImage getImage() const { return image; }
   QString getName() const { return name; }
+
+  float getAlpha() const;
+  void setAlpha(float newAlpha);
 
 private:
   QImage image;
