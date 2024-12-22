@@ -349,16 +349,29 @@ scan_line(QImage& canvas, const std::vector<QPoint>& points)
   }
 }
 
-// TODO:
-// multiply mode
-// screen mode
-// overlay mode
-// lighteen mode
-// darkeen mode
 QRgb
-normalMode(QRgb f, QRgb b)
+normal_mode(QRgb f, QRgb b)
 {
   return b;
+}
+
+QRgb
+multiply_mode(QRgb foreground, QRgb background)
+{
+  uchar foregroundRed = qRed(foreground);
+  uchar foregroundGreen = qGreen(foreground);
+  uchar foregroundBlue = qBlue(foreground);
+
+  uchar backgroundRed = qRed(background);
+  uchar backgroundGreen = qGreen(background);
+  uchar backgroundBlue = qBlue(background);
+
+  uchar red = (foregroundRed * backgroundRed) >> 8;
+  uchar green = (foregroundGreen * backgroundGreen) >> 8;
+  uchar blue = (foregroundBlue * backgroundBlue) >> 8;
+
+  // Combine the results back into a QRgb value
+  return qRgb(red, green, blue);
 }
 
 uchar
@@ -368,6 +381,96 @@ blend_function(uchar a, uchar b, float alpha)
   // a is background
   return alpha * b + (1 - alpha) * a;
 }
+QRgb
+screen_mode(QRgb foreground, QRgb background)
+{
+  uchar foregroundRed = qRed(foreground);
+  uchar foregroundGreen = qGreen(foreground);
+  uchar foregroundBlue = qBlue(foreground);
+
+  uchar backgroundRed = qRed(background);
+  uchar backgroundGreen = qGreen(background);
+  uchar backgroundBlue = qBlue(background);
+
+  uchar red = 255 - ((255 - foregroundRed) * (255 - backgroundRed)) >> 8;
+  uchar green = 255 - ((255 - foregroundGreen) * (255 - backgroundGreen)) >> 8;
+  uchar blue = 255 - ((255 - foregroundBlue) * (255 - backgroundBlue)) >> 8;
+
+  return qRgb(red, green, blue);
+}
+
+QRgb
+overlay_mode(QRgb foreground, QRgb background)
+{
+  uchar foregroundRed = qRed(foreground);
+  uchar foregroundGreen = qGreen(foreground);
+  uchar foregroundBlue = qBlue(foreground);
+
+  uchar backgroundRed = qRed(background);
+  uchar backgroundGreen = qGreen(background);
+  uchar backgroundBlue = qBlue(background);
+
+  uchar red =
+    (foregroundRed < 128)
+      ? (2 * foregroundRed * backgroundRed) / 255
+      : 255 - (2 * (255 - foregroundRed) * (255 - backgroundRed)) / 255;
+  uchar green =
+    (foregroundGreen < 128)
+      ? (2 * foregroundGreen * backgroundGreen) / 255
+      : 255 - (2 * (255 - foregroundGreen) * (255 - backgroundGreen)) / 255;
+  uchar blue =
+    (foregroundBlue < 128)
+      ? (2 * foregroundBlue * backgroundBlue) / 255
+      : 255 - (2 * (255 - foregroundBlue) * (255 - backgroundBlue)) / 255;
+
+  return qRgb(red, green, blue);
+}
+
+QRgb
+darken_mode(QRgb foreground, QRgb background)
+{
+  uchar foregroundRed = qRed(foreground);
+  uchar foregroundGreen = qGreen(foreground);
+  uchar foregroundBlue = qBlue(foreground);
+
+  uchar backgroundRed = qRed(background);
+  uchar backgroundGreen = qGreen(background);
+  uchar backgroundBlue = qBlue(background);
+
+  uchar red = qMin(foregroundRed, backgroundRed);
+  uchar green = qMin(foregroundGreen, backgroundGreen);
+  uchar blue = qMin(foregroundBlue, backgroundBlue);
+
+  return qRgb(red, green, blue);
+}
+
+QRgb
+lighten_mode(QRgb foreground, QRgb background)
+{
+  uchar foregroundRed = qRed(foreground);
+  uchar foregroundGreen = qGreen(foreground);
+  uchar foregroundBlue = qBlue(foreground);
+
+  uchar backgroundRed = qRed(background);
+  uchar backgroundGreen = qGreen(background);
+  uchar backgroundBlue = qBlue(background);
+
+  uchar red = qMax(foregroundRed, backgroundRed);
+  uchar green = qMax(foregroundGreen, backgroundGreen);
+  uchar blue = qMax(foregroundBlue, backgroundBlue);
+
+  return qRgb(red, green, blue);
+}
+
+typedef QRgb (*BlendModeFunc)(QRgb foreground, QRgb background);
+BlendModeFunc blendModes[] = {
+  normal_mode,   // 0
+  multiply_mode, // 1
+  screen_mode,   // 2
+  overlay_mode,  // 3
+  darken_mode,   // 4
+  lighten_mode,  // 5
+};
 
 void
 blend(const QImage& background,
@@ -376,10 +479,15 @@ blend(const QImage& background,
       int mode,
       QImage& out)
 {
+  if (mode < 0 || mode >= sizeof(blendModes) / sizeof(BlendModeFunc)) {
+    throw new std::runtime_error("Blend mode out of range");
+  }
+
+  BlendModeFunc modeFunc = blendModes[mode];
   // iterate over all pixels
   for (int y = 0; y < background.height(); ++y) {
     for (int x = 0; x < background.width(); ++x) {
-      QRgb c = normalMode(background.pixel(x, y), foreground.pixel(x, y));
+      QRgb c = modeFunc(background.pixel(x, y), foreground.pixel(x, y));
       // TODO: handle multiple blend modes if (mode == 0) etc...
       //   uchar c = f[mode](background[i], foreground[i]);
 

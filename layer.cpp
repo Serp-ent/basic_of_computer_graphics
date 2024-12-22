@@ -1,4 +1,5 @@
 #include "layer.h"
+#include <QDebug>
 
 float
 Layer::getAlpha() const
@@ -13,4 +14,20 @@ Layer::setAlpha(float newAlpha)
     throw new std::runtime_error("Alpha should in range [0,1]");
   }
   alpha = newAlpha;
+}
+
+int
+Layer::getBlendMode() const
+{
+  return mode;
+}
+
+void
+Layer::setBlendMode(int newMode)
+{
+
+  qDebug()
+    << QString("Layer::setBlendMode of '%1' to %2\n").arg(name).arg(newMode);
+  // TODO: check if we are in range
+  mode = newMode;
 }

@@ -2,6 +2,7 @@
 #define EKRAN_H
 
 #include "movablepoint.h"
+#include <QComboBox>
 #include <QDebug>
 #include <QLabel>
 #include <QListWidget>
@@ -43,11 +44,12 @@ private:
   // scan line
   std::vector<QPoint> points;
 
-  // alpha blending // exercise 6
+  // alpha blending // exercise 6 *****************************************
   std::vector<Layer> layers;
   QSlider* alphaSlider; // TODO: read slider values form layers
   QLabel* alphaLabel;
   QListWidget* layerList;
+  QComboBox* blendModeDropdown;
   void updateAlpha(int value)
   {
     float alpha = value / 100.0f;
@@ -84,11 +86,37 @@ private:
 
           alphaLabel->setText(
             QString("Alpha: %1").arg(alpha, 0, 'f', 2)); // Update label
+
+          int blendModeIndex =
+            l.getBlendMode(); // Get the blend mode index (assuming it's stored
+                              // as an int)
+          blendModeDropdown->setCurrentIndex(
+            blendModeIndex); // Set combo box to the appropriate blend mode
+
           break;
         }
       }
     }
   }
+
+  void onBlendModeChanged(int modeIndex)
+  {
+    // Get the selected item
+    QListWidgetItem* selectedItem = layerList->currentItem();
+    if (selectedItem) {
+      QString layerName = selectedItem->text();
+
+      // Find the layer with the same name and set the blend mode
+      for (auto& layer : layers) {
+        if (layer.getName() == layerName) {
+          // Set the blend mode based on the selected index
+          layer.setBlendMode(modeIndex);
+          break;
+        }
+      }
+    }
+  }
+  // alpha blending // exercise 6 *****************************************
 };
 
 #endif // EKRAN_H

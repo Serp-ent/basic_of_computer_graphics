@@ -21,6 +21,9 @@ public:
   float getAlpha() const;
   void setAlpha(float newAlpha);
 
+  int getBlendMode() const;
+  void setBlendMode(int newMode);
+
 private:
   QImage image;
   float alpha;

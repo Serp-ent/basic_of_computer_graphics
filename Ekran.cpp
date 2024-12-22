@@ -5,6 +5,7 @@
 
 #include "layer.h"
 #include "movablepoint.h"
+#include <QComboBox>
 #include <QImage>
 #include <QLabel>
 #include <algorithm>
@@ -108,10 +109,10 @@ Ekran::Ekran(QWidget* parent)
   canvas.fill(0);
 
   layers.push_back(
-    Layer(QImage(":/images/wilkizajac.jpg"), 0.5, 1, "Wilk_i_zajac"));
-  layers.push_back(Layer(QImage(":/images/room.jpg"), 0.5, 1, "room"));
+    Layer(QImage(":/images/wilkizajac.jpg"), 0, 0, "Wilk_i_zajac"));
+  layers.push_back(Layer(QImage(":/images/room.jpg"), 0, 0, "room"));
   layers.push_back(
-    Layer(QImage(":/images/treasureIsland.jpg"), 0.5, 1, "treasure_island"));
+    Layer(QImage(":/images/treasureIsland.jpg"), 0, 0, "treasure_island"));
 
   for (const auto& l : layers) {
     // make sure that all the images are open
@@ -120,20 +121,37 @@ Ekran::Ekran(QWidget* parent)
     }
   }
 
-  // alpha slider setup
+  // Alpha slider setup
   alphaSlider = new QSlider(Qt::Horizontal, this);
   alphaSlider->setRange(0, 100);
   alphaSlider->setValue(100);
-  alphaSlider->setGeometry(width() - 200 - 10, 10, 200, 30);
-  // TODO: conect to invoke action
+  alphaSlider->setGeometry(width() - 200 - 10, 50, 200, 30);
   connect(alphaSlider, &QSlider::valueChanged, this, &Ekran::updateAlpha);
+
   alphaLabel = new QLabel(this);
-  // TODO: change label on fly
   alphaLabel->setText("Alpha: 100%");
   alphaLabel->setGeometry(alphaSlider->x() - 100, alphaSlider->y(), 90, 30);
   alphaLabel->setAlignment(Qt::AlignRight | Qt::AlignCenter);
 
-  // layer list setup
+  // Blend mode dropdown (QComboBox)
+  // TODO: new modes should be read from the array
+  blendModeDropdown = new QComboBox(this);
+  blendModeDropdown->addItem("Normal");
+  blendModeDropdown->addItem("Multiply");
+  blendModeDropdown->addItem("Screen");
+  blendModeDropdown->addItem("Overlay");
+  blendModeDropdown->addItem("Darken");
+  blendModeDropdown->addItem("Lighten");
+  blendModeDropdown->setGeometry(alphaLabel->x(),
+                                 alphaSlider->y() - 40,
+                                 200,
+                                 30); // Place it above the slider
+  connect(blendModeDropdown,
+          QOverload<int>::of(&QComboBox::currentIndexChanged),
+          this,
+          &Ekran::onBlendModeChanged);
+
+  // Layer list setup
   layerList = new QListWidget(this);
   layerList->setGeometry(alphaLabel->x(),
                          alphaLabel->y() + 40,
@@ -177,7 +195,7 @@ Ekran::paintEvent(QPaintEvent* event)
     blend(blendedCanvas,
           layerImage,
           alpha,
-          -1,
+          layer.getBlendMode(),
           blendedCanvas); // Update blendedCanvas with the result
   }
 
