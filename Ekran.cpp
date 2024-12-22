@@ -110,6 +110,8 @@ Ekran::Ekran(QWidget* parent)
   layers.push_back(
     Layer(QImage(":/images/wilkizajac.jpg"), 0.5, 1, "Wilk_i_zajac"));
   layers.push_back(Layer(QImage(":/images/room.jpg"), 0.5, 1, "room"));
+  layers.push_back(
+    Layer(QImage(":/images/treasureIsland.jpg"), 0.5, 1, "treasure_island"));
 
   for (const auto& l : layers) {
     // make sure that all the images are open
