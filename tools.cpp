@@ -506,7 +506,7 @@ blend(const QImage& background,
 }
 
 void
-multiply3x1(int A[][3], int B[], int C[])
+multiply3x1(float A[][3], float B[], float C[])
 {
   // Initialize result matrix C to 0
   for (int i = 0; i < 3; i++) {
@@ -522,7 +522,7 @@ multiply3x1(int A[][3], int B[], int C[])
 }
 
 void
-multiply3x3(int A[][3], int B[][3], int C[][3])
+multiply3x3(float A[][3], float B[][3], float C[][3])
 {
   // Initialize result matrix C to 0
   for (int i = 0; i < 3; i++) {

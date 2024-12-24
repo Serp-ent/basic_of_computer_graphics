@@ -198,7 +198,13 @@ Ekran::Ekran(QWidget* parent)
   translationY->setValue(0);
   translationY->setGeometry(width() - 200 - 10, 80, 200, 30);
   connect(translationY, &QSlider::valueChanged, this, &Ekran::translate_y);
-  // translationY;
+  // rotationSlider;
+  const int rotation_bound = 360;
+  rotationSlider = new QSlider(Qt::Horizontal, this);
+  rotationSlider->setRange(0, rotation_bound);
+  rotationSlider->setValue(0);
+  rotationSlider->setGeometry(width() - 200 - 10, 110, 200, 30);
+  connect(rotationSlider, &QSlider::valueChanged, this, &Ekran::rotate_image);
 }
 
 void
@@ -234,11 +240,66 @@ Ekran::paintEvent(QPaintEvent* event)
   *************************************************************/
 
   // do translation multiplications
+  float temp[3] = { 0, 0, 0 };
   memcpy(img_out_sizes, img_sizes, 3 * sizeof(int));
-  // start of translation chain
-  multiply3x1(translation, img_sizes, img_out_sizes);
 
-  p.drawImage(img_out_sizes[0], img_out_sizes[1], img);
+  //* start of translation chain *************************************
+  // translation
+  // multiply3x1(translation, img_sizes, img_out_sizes);
+
+  // rotation
+  int img_width = img.width();
+  int img_height = img.height();
+
+  // Calculate center of the image
+  float centerX = img_width / 2.0;
+  float centerY = img_height / 2.0;
+
+  // Rotation matrix (rotation by 'degree')
+  float rotation[3][3] = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 1 } };
+  double alpha = (degree / 180.0) * M_PI; // Convert degrees to radians
+  rotation[0][0] = std::cos(alpha);       // Rotation in x
+  rotation[0][1] = -std::sin(alpha);      // Rotation in y
+  rotation[1][0] = std::sin(alpha);       // Rotation in x
+  rotation[1][1] = std::cos(alpha);       // Rotation in y
+
+  // Loop through every pixel in the image
+  for (int y = 0; y < img_height; y++) {
+    for (int x = 0; x < img_width; x++) {
+      // Step 1: Translate pixel (x, y) to the origin (center of the image)
+      float translatedX = x - centerX;
+      float translatedY = y - centerY;
+
+      // Step 2: Apply rotation to the pixel's coordinates
+      float rotatedX =
+        rotation[0][0] * translatedX + rotation[0][1] * translatedY;
+      float rotatedY =
+        rotation[1][0] * translatedX + rotation[1][1] * translatedY;
+
+      // Step 3: Translate back to original position
+      float finalX = rotatedX + centerX;
+      float finalY = rotatedY + centerY;
+
+      // Ensure finalX, finalY are within the canvas bounds
+      if (finalX >= 0 && finalX < img_width && finalY >= 0 &&
+          finalY < img_height) {
+        // Get pixel color at (x, y) from the original image
+        QColor pixelColor = img.pixelColor(x, y);
+        uint red = pixelColor.red();
+        uint green = pixelColor.green();
+        uint blue = pixelColor.blue();
+
+        // Step 4: Draw the rotated pixel on the canvas
+        drawPixel(canvas,
+                  static_cast<int>(finalX),
+                  static_cast<int>(finalY),
+                  red,
+                  green,
+                  blue);
+      }
+    }
+  }
+  //* end of translation chain *************************************
 
   update();
 
