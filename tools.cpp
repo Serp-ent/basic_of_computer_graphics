@@ -504,3 +504,39 @@ blend(const QImage& background,
     }
   }
 }
+
+void
+multiply3x1(int A[][3], int B[], int C[])
+{
+  // Initialize result matrix C to 0
+  for (int i = 0; i < 3; i++) {
+    C[i] = 0;
+  }
+
+  // Perform multiplication
+  for (int i = 0; i < 3; i++) {
+    for (int k = 0; k < 3; k++) {
+      C[i] += A[i][k] * B[k];
+    }
+  }
+}
+
+void
+multiply3x3(int A[][3], int B[][3], int C[][3])
+{
+  // Initialize result matrix C to 0
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      C[i][j] = 0;
+    }
+  }
+
+  // Perform multiplication
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      for (int k = 0; k < 3; k++) {
+        C[i][j] += A[i][k] * B[k][j];
+      }
+    }
+  }
+}

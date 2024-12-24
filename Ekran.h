@@ -120,6 +120,10 @@ private:
   // alpha blending // exercise 6 *****************************************/
 
   QImage img;
+  int img_sizes[3];
+  int img_out_sizes[3];
+  // transform
+  int translation[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
   // TODO: use slider group
   QSlider* translationX;
   QSlider* translationY;
@@ -128,10 +132,8 @@ private:
   QSlider* scalingY;
   QSlider* shearingX;
   QSlider* shearingY;
-  void translate_x(int value)
-  {
-    qDebug() << "translate_x() value = " << value << '\n';
-  };
+  void translate_x(int value) { translation[0][2] = value; };
+  void translate_y(int value) { translation[1][2] = value; };
 };
 
 #endif // EKRAN_H

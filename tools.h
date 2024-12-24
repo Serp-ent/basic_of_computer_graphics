@@ -71,4 +71,10 @@ blend(const QImage& background,
       int mode,
       QImage& result);
 
+// Function to multiply two 3x3 matrices
+void multiply3x3(int A[3][3], int B[3][3], int C[3][3]);
+
+// Function to multiply a 3x3 matrix with a 3x1 matrix
+void multiply3x1(int A[3][3], int B[3], int C[3]);
+
 #endif // TOOLS_H

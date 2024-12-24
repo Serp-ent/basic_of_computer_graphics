@@ -177,12 +177,27 @@ Ekran::Ekran(QWidget* parent)
     throw new std::runtime_error{ "Cannot open file 'wilk.png' in exercise 6" };
   }
 
+  const int x_center = 10 + canvas.width() / 2 - img.width() / 2;
+  const int y_center = 10 + canvas.height() / 2 - img.height() / 2;
+  img_sizes[0] = x_center;
+  img_sizes[1] = y_center;
+  img_sizes[2] = 1;
+
+  // TODO: add reset button
   // translationX;
   translationX = new QSlider(Qt::Horizontal, this);
-  translationX->setRange(0, 100);
-  translationX->setValue(50);
+  const int horizontal_bound = 250;
+  translationX->setRange(-horizontal_bound, horizontal_bound);
+  translationX->setValue(0);
   translationX->setGeometry(width() - 200 - 10, 50, 200, 30);
   connect(translationX, &QSlider::valueChanged, this, &Ekran::translate_x);
+  // translationY;
+  const int vertical_bound = 150;
+  translationY = new QSlider(Qt::Horizontal, this);
+  translationY->setRange(-vertical_bound, vertical_bound);
+  translationY->setValue(0);
+  translationY->setGeometry(width() - 200 - 10, 80, 200, 30);
+  connect(translationY, &QSlider::valueChanged, this, &Ekran::translate_y);
   // translationY;
 }
 
@@ -218,9 +233,12 @@ Ekran::paintEvent(QPaintEvent* event)
   p.drawImage(0, 0, blendedCanvas);
   *************************************************************/
 
-  const int x_center = 10 + canvas.width() / 2 - img.width() / 2;
-  const int y_center = 10 + canvas.height() / 2 - img.height() / 2;
-  p.drawImage(x_center, y_center, img);
+  // do translation multiplications
+  memcpy(img_out_sizes, img_sizes, 3 * sizeof(int));
+  // start of translation chain
+  multiply3x1(translation, img_sizes, img_out_sizes);
+
+  p.drawImage(img_out_sizes[0], img_out_sizes[1], img);
 
   update();
 
