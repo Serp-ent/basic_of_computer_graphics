@@ -105,9 +105,10 @@ Ekran::Ekran(QWidget* parent)
   setMouseTracking(true);
   this->resize(1000, 600);
 
-  canvas = QImage(640, 480, QImage::Format_RGB32);
-  canvas.fill(0);
+  canvas = QImage(width() - 50 - 200, height() - 20, QImage::Format_RGB32);
+  canvas.fill(Qt::lightGray);
 
+  /***** EXERCISE 6 **********************************************************
   layers.push_back(
     Layer(QImage(":/images/wilkizajac.jpg"), 0, 0, "Wilk_i_zajac"));
   layers.push_back(Layer(QImage(":/images/room.jpg"), 0, 0, "room"));
@@ -169,6 +170,20 @@ Ekran::Ekran(QWidget* parent)
   if (layerList->count() > 0) {
     layerList->setCurrentRow(0); // Select the first item (index 0)
   };
+**********************************************************************************/
+
+  img.load(":/images/wilk.png");
+  if (img.isNull()) {
+    throw new std::runtime_error{ "Cannot open file 'wilk.png' in exercise 6" };
+  }
+
+  // translationX;
+  translationX = new QSlider(Qt::Horizontal, this);
+  translationX->setRange(0, 100);
+  translationX->setValue(50);
+  translationX->setGeometry(width() - 200 - 10, 50, 200, 30);
+  connect(translationX, &QSlider::valueChanged, this, &Ekran::translate_x);
+  // translationY;
 }
 
 void
@@ -177,10 +192,11 @@ Ekran::paintEvent(QPaintEvent* event)
   QPainter p(this);
   p.fillRect(0, 0, width(), height(), Qt::black);
 
-  p.drawImage(0, 0, canvas);
+  p.drawImage(10, 10, canvas);
 
   QImage blendedCanvas = canvas; // create copy of canvas
 
+  /**** EXERCISE 6 **********************************************
   // TODO: maybe use reverse iterators
   // TOOL 6 -> Alpha blending
   for (int i = layers.size() - 1; i >= 0; --i) {
@@ -200,6 +216,11 @@ Ekran::paintEvent(QPaintEvent* event)
   }
 
   p.drawImage(0, 0, blendedCanvas);
+  *************************************************************/
+
+  const int x_center = 10 + canvas.width() / 2 - img.width() / 2;
+  const int y_center = 10 + canvas.height() / 2 - img.height() / 2;
+  p.drawImage(x_center, y_center, img);
 
   update();
 

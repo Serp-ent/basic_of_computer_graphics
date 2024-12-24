@@ -45,6 +45,7 @@ private:
   std::vector<QPoint> points;
 
   // alpha blending // exercise 6 *****************************************
+  /*
   std::vector<Layer> layers;
   QSlider* alphaSlider; // TODO: read slider values form layers
   QLabel* alphaLabel;
@@ -116,7 +117,21 @@ private:
       }
     }
   }
-  // alpha blending // exercise 6 *****************************************
+  // alpha blending // exercise 6 *****************************************/
+
+  QImage img;
+  // TODO: use slider group
+  QSlider* translationX;
+  QSlider* translationY;
+  QSlider* rotation;
+  QSlider* scalingX;
+  QSlider* scalingY;
+  QSlider* shearingX;
+  QSlider* shearingY;
+  void translate_x(int value)
+  {
+    qDebug() << "translate_x() value = " << value << '\n';
+  };
 };
 
 #endif // EKRAN_H
