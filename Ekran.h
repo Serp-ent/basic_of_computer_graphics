@@ -123,10 +123,11 @@ private:
   QImage img;
   float img_pos[3];
   float img_out_sizes[3];
+  float alpha;
   // transform
-  float translation[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
-  // no rotation in the begining
-  float rotation[3][3] = {
+  float translation_matrix[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+  // no rotation_matrix in the begining
+  float rotation_matrix[3][3] = {
     { 1, 0, 0 },
     { 0, 1, 0 },
     { 0, 0, 1 },
@@ -152,22 +153,22 @@ private:
   QSlider* scalingYSlider;
   QSlider* shearingXSlider;
   QSlider* shearingYSlider;
-  void translate_x(int value) { translation[0][2] = value; };
-  void translate_y(int value) { translation[1][2] = value; };
+  void translate_x(int value) { translation_matrix[0][2] = value; };
+  void translate_y(int value) { translation_matrix[1][2] = value; };
   void rotate_image(int degree)
   {
-    double alpha = (degree / 180.0) * M_PI;
-    rotation[0][0] = std::cos(alpha);
-    rotation[0][1] = -std::sin(alpha);
-    rotation[0][2] = 0;
+    alpha = (degree / 180.0) * M_PI;
+    rotation_matrix[0][0] = std::cos(alpha);
+    rotation_matrix[0][1] = -std::sin(alpha);
+    rotation_matrix[0][2] = 0;
 
-    rotation[1][0] = std::sin(alpha);
-    rotation[1][1] = std::cos(alpha);
-    rotation[1][2] = 0;
+    rotation_matrix[1][0] = std::sin(alpha);
+    rotation_matrix[1][1] = std::cos(alpha);
+    rotation_matrix[1][2] = 0;
 
-    rotation[2][0] = 0;
-    rotation[2][1] = 0;
-    rotation[2][2] = 1;
+    rotation_matrix[2][0] = 0;
+    rotation_matrix[2][1] = 0;
+    rotation_matrix[2][2] = 1;
   };
 
   float scale_value(int value)

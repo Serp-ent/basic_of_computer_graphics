@@ -279,9 +279,6 @@ Ekran::paintEvent(QPaintEvent* event)
 
   p.drawImage(10, 10, canvas);
 
-  // EXERCISE 6 QImage blendedCanvas = canvas; // create copy of canvas
-  QImage movingCanvas = canvas; // create copy of canvas
-
   /**** EXERCISE 6 **********************************************
   // TODO: maybe use reverse iterators
   // TOOL 6 -> Alpha blending
@@ -333,7 +330,7 @@ Ekran::paintEvent(QPaintEvent* event)
   copyMatrix(tempMatrix, combinedMatrix);
 
   // 3. Apply rotation
-  multiply3x3(rotation, combinedMatrix, tempMatrix);
+  multiply3x3(rotation_matrix, combinedMatrix, tempMatrix);
   copyMatrix(tempMatrix, combinedMatrix);
 
   // 4. Apply shearing
@@ -345,9 +342,10 @@ Ekran::paintEvent(QPaintEvent* event)
   copyMatrix(tempMatrix, combinedMatrix);
 
   // 6. Apply the final translation
-  multiply3x3(translation, combinedMatrix, tempMatrix);
+  multiply3x3(translation_matrix, combinedMatrix, tempMatrix);
   copyMatrix(tempMatrix, combinedMatrix);
 
+  QImage transformedCanvas = canvas;
   for (int y = 0; y < img.height(); ++y) {
     for (int x = 0; x < img.width(); ++x) {
       float pixelPos[3] = { img_pos[0] + (float)x,
@@ -364,12 +362,179 @@ Ekran::paintEvent(QPaintEvent* event)
       uint green = pixel.green();
       uint blue = pixel.blue();
 
-      drawPixel(
-        movingCanvas, transformedPos[0], transformedPos[1], red, green, blue);
+      // drawPixel(transformedCanvas,
+      //           transformedPos[0],
+      //           transformedPos[1],
+      //           red,
+      //           green,
+      //           blue);
     }
   }
 
-  p.drawImage(10, 10, movingCanvas);
+  // ************************************************************
+
+  float inv_translationToOrigin[3][3] = {
+    { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
+    { 0, 1, -(img_pos[1] + img.height() / 2.0f) },
+    { 0, 0, 1 }
+  };
+  // Translate back from the center of the image (from origin)
+  float inv_translationBack[3][3] = {
+    { 1, 0, img_pos[0] + img.width() / 2.0f },
+    { 0, 1, img_pos[1] + img.height() / 2.0f },
+    { 0, 0, 1 }
+  };
+  float inv_translation_matrix[3][3];
+  copyMatrix(translation_matrix, inv_translation_matrix);
+  inv_translation_matrix[0][2] = -1 * inv_translation_matrix[0][2];
+  inv_translation_matrix[1][2] = -1 * inv_translation_matrix[1][2];
+
+  float inv_scale_matrix[3][3];
+  copyMatrix(scale_matrix, inv_scale_matrix);
+  inv_scale_matrix[0][0] = 1 / scale_matrix[0][0];
+  inv_scale_matrix[1][1] = 1 / scale_matrix[1][1];
+  inv_scale_matrix[0][2] = 0; // Reset translation part
+  inv_scale_matrix[1][2] = 0;
+
+  float inv_rotation_matrix[3][3];
+  copyMatrix(rotation_matrix, inv_rotation_matrix);
+  inv_rotation_matrix[0][0] = std::cos(alpha);
+  inv_rotation_matrix[0][1] = std::sin(alpha);
+  inv_rotation_matrix[1][0] = -std::sin(alpha);
+  inv_rotation_matrix[1][1] = std::cos(alpha);
+
+  float inv_shearing_matrix[3][3];
+  copyMatrix(shearing_matrix, inv_shearing_matrix);
+  inv_shearing_matrix[0][1] = -shearing_matrix[0][1];
+  inv_shearing_matrix[1][0] = -shearing_matrix[1][0];
+
+  /*
+  // 1. Translate to origin
+  multiply3x3(translationToOrigin, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 2. Apply scaling
+  multiply3x3(scale_matrix, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 3. Apply rotation
+  multiply3x3(rotation_matrix, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 4. Apply shearing
+  multiply3x3(shearing_matrix, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 5. Translate back to the original position
+  multiply3x3(translationBack, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 6. Apply the final translation
+  multiply3x3(translation_matrix, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+  */
+
+  // Start with the identity matrix for invMatrix
+  float invMatrix[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+  // multiply the inverse matrices in reverse order
+  // Step 1: Undo general translation
+  multiply3x3(inv_translation_matrix, invMatrix, tempMatrix);
+  copyMatrix(tempMatrix, invMatrix);
+  // to origin
+  multiply3x3(translationToOrigin, invMatrix, tempMatrix);
+  copyMatrix(tempMatrix, invMatrix);
+  // Step 4: Undo shearing
+  multiply3x3(inv_shearing_matrix, invMatrix, tempMatrix);
+  copyMatrix(tempMatrix, invMatrix);
+  // Step 2: Undo rotation around the center
+  multiply3x3(inv_rotation_matrix, invMatrix, tempMatrix);
+  copyMatrix(tempMatrix, invMatrix);
+  // Step 3: Undo scaling (also around the center)
+  multiply3x3(inv_scale_matrix, invMatrix, tempMatrix);
+  copyMatrix(tempMatrix, invMatrix);
+  // Step 6: Undo translation back to the original position
+  multiply3x3(translationBack, invMatrix, tempMatrix);
+  copyMatrix(tempMatrix, invMatrix);
+
+  // go through every pixel of transformedCanvas
+  // use inverse matrix to seek in old image
+  // fill color and use bilinear interpolation
+
+  for (int y = 0; y < transformedCanvas.height(); ++y) {
+    for (int x = 0; x < transformedCanvas.width(); ++x) {
+      float pixel[3];
+      pixel[0] = x;
+      pixel[1] = y;
+      pixel[2] = 1;
+
+      // For given [x, y, 1] matrix, do inverse
+      float invPos[3] = { 0, 0, 0 };
+      multiply3x1(invMatrix, pixel, invPos);
+
+      // If the calculated position is out of the image bounds, skip
+      if ((invPos[0] < img_pos[0] || invPos[0] >= img_pos[0] + img.width()) ||
+          (invPos[1] < img_pos[1] || invPos[1] >= img_pos[1] + img.height())) {
+        continue;
+      }
+
+      // Check for clear hit (no fractional part)
+      if (invPos[0] == std::floor(invPos[0]) &&
+          invPos[1] == std::floor(invPos[1])) {
+        // Clear hit: get the color from the image
+        int x0 = static_cast<int>(invPos[0]) - static_cast<int>(img_pos[0]);
+        int y0 = static_cast<int>(invPos[1]) - static_cast<int>(img_pos[1]);
+
+        // Ensure coordinates are within the image bounds
+        if (x0 < 0 || x0 >= img.width() || y0 < 0 || y0 >= img.height()) {
+          continue;
+        }
+
+        const QColor& color = img.pixelColor(x0, y0);
+
+        // Draw the transformed pixel with the clear hit color
+        drawPixel(
+          transformedCanvas, x, y, color.red(), color.green(), color.blue());
+        continue; // Skip to the next pixel
+      }
+
+      // Perform bilinear interpolation if not a clear hit
+      int x0 =
+        static_cast<int>(std::floor(invPos[0])) - static_cast<int>(img_pos[0]);
+      int y0 =
+        static_cast<int>(std::floor(invPos[1])) - static_cast<int>(img_pos[1]);
+      int x1 = x0 + 1;
+      int y1 = y0 + 1;
+
+      // Ensure surrounding coordinates are within bounds
+      if (x0 < 0 || x0 >= img.width() || y0 < 0 || y0 >= img.height() ||
+          x1 < 0 || x1 >= img.width() || y1 < 0 || y1 >= img.height()) {
+        continue;
+      }
+
+      // Calculate interpolation weights (a and b)
+      float a = invPos[0] - std::floor(invPos[0]);
+      float b = invPos[1] - std::floor(invPos[1]);
+
+      // Get the colors of the four surrounding pixels
+      QColor p1 = img.pixelColor(x0, y0);
+      QColor p2 = img.pixelColor(x1, y0);
+      QColor p3 = img.pixelColor(x0, y1);
+      QColor p4 = img.pixelColor(x1, y1);
+
+      // Perform bilinear interpolation for each color channel
+      QColor interpolatedColor =
+        bilinear_interpolation_color(a, b, p1, p2, p3, p4);
+
+      // Draw the interpolated pixel
+      drawPixel(transformedCanvas,
+                x,
+                y,
+                interpolatedColor.red(),
+                interpolatedColor.green(),
+                interpolatedColor.blue());
+    }
+  }
+  p.drawImage(10, 10, transformedCanvas);
 
   update();
 
