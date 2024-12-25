@@ -138,14 +138,20 @@ private:
     { 0, 0, 1 },
   };
 
+  float shearing_matrix[3][3] = {
+    { 1, 0, 0 },
+    { 0, 1, 0 },
+    { 0, 0, 1 },
+  };
+
   // TODO: use slider group
   QSlider* translationX;
   QSlider* translationY;
   QSlider* rotationSlider;
   QSlider* scalingXSlider;
   QSlider* scalingYSlider;
-  QSlider* shearingX;
-  QSlider* shearingY;
+  QSlider* shearingXSlider;
+  QSlider* shearingYSlider;
   void translate_x(int value) { translation[0][2] = value; };
   void translate_y(int value) { translation[1][2] = value; };
   void rotate_image(int degree)
@@ -167,7 +173,6 @@ private:
   float scale_value(int value)
   {
     if (value < 0 || value > 200) {
-      qDebug() << "scale_value: value out of range, must be between 0 and 200.";
       return 1.0f; // Default scale
     }
 
@@ -175,16 +180,21 @@ private:
     return value / 100.0f;
   }
 
-  void scale_x(int value)
+  float scale_shearing(int value)
   {
-    qDebug() << "scale_x = " << value << '\n';
-    scale_matrix[0][0] = scale_value(value);
+    if (value < -200 || value > 200) {
+      return 1.0f; // Default scale
+    }
+
+    // Calculate scaling factor relative to 100
+    return value / 100.0f;
   }
-  void scale_y(int value)
-  {
-    qDebug() << "scale_y = " << value << '\n';
-    scale_matrix[1][1] = scale_value(value);
-  }
+
+  void scale_x(int value) { scale_matrix[0][0] = scale_value(value); }
+  void scale_y(int value) { scale_matrix[1][1] = scale_value(value); }
+
+  void shear_x(int value) { shearing_matrix[0][1] = scale_shearing(value); }
+  void shear_y(int value) { shearing_matrix[1][0] = scale_shearing(value); }
 };
 
 #endif // EKRAN_H
