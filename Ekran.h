@@ -121,17 +121,16 @@ private:
   // alpha blending // exercise 6 *****************************************/
 
   QImage img;
-  float img_sizes[3];
+  float img_pos[3];
   float img_out_sizes[3];
   // transform
   float translation[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
   // no rotation in the begin
-  // float rotation[3][3] = {
-  //   { 1, 0, 0 },
-  //   { 0, 1, 0 },
-  //   { 0, 0, 1 },
-  // };
-  float degree;
+  float rotation[3][3] = {
+    { 1, 0, 0 },
+    { 0, 1, 0 },
+    { 0, 0, 1 },
+  };
 
   // TODO: use slider group
   QSlider* translationX;
@@ -145,20 +144,18 @@ private:
   void translate_y(int value) { translation[1][2] = value; };
   void rotate_image(int degree)
   {
-    this->degree = degree;
     double alpha = (degree / 180.0) * M_PI;
-    qDebug() << "degree=" << degree << "alpha is " << alpha << '\n';
-    // rotation[0][0] = std::cos(alpha);
-    // rotation[0][1] = -std::sin(alpha);
-    // rotation[0][2] = 0;
+    rotation[0][0] = std::cos(alpha);
+    rotation[0][1] = -std::sin(alpha);
+    rotation[0][2] = 0;
 
-    // rotation[1][0] = std::sin(alpha);
-    // rotation[1][1] = std::cos(alpha);
-    // rotation[1][2] = 0;
+    rotation[1][0] = std::sin(alpha);
+    rotation[1][1] = std::cos(alpha);
+    rotation[1][2] = 0;
 
-    // rotation[2][0] = 0;
-    // rotation[2][1] = 0;
-    // rotation[2][2] = 1;
+    rotation[2][0] = 0;
+    rotation[2][1] = 0;
+    rotation[2][2] = 1;
   };
 };
 

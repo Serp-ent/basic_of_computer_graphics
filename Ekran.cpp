@@ -179,9 +179,9 @@ Ekran::Ekran(QWidget* parent)
 
   const int x_center = 10 + canvas.width() / 2 - img.width() / 2;
   const int y_center = 10 + canvas.height() / 2 - img.height() / 2;
-  img_sizes[0] = x_center;
-  img_sizes[1] = y_center;
-  img_sizes[2] = 1;
+  img_pos[0] = x_center;
+  img_pos[1] = y_center;
+  img_pos[2] = 1;
 
   // TODO: add reset button
   // translationX;
@@ -246,24 +246,39 @@ Ekran::paintEvent(QPaintEvent* event)
 
   for (int y = 0; y < img.height(); ++y) {
     for (int x = 0; x < img.width(); ++x) {
-      float temp[3] = { (float)x,
-                        (float)y,
+      float temp[3] = { img_pos[0] + (float)x,
+                        img_pos[1] + (float)y,
                         1 }; // Coordinates of the current pixel
-      float out[3];
-      // rotation
-      multiply3x1(translation, temp, out); // Apply translation
+      float out[3] = { 0, 0, 0 };
+      /* 1 translation
+       * multiply3x1(translation, temp, out); // Apply translation
+       */
+
+      /* 2 rotation
+       *
+       */
+      // Step 1: Translate the pixel to the origin (image center)
+      float translationToOrigin[3][3] = {
+        { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
+        { 0, 1, -(img_pos[1] + img.height() / 2.0f) },
+        { 0, 0, 1 }
+      };
+      multiply3x1(translationToOrigin, temp, out);
+
+      // // Step 2: Rotate the pixel around the origin
+      multiply3x1(rotation, out, temp);
+
+      // translation back to original position
+      translationToOrigin[0][2] = -1 * translationToOrigin[0][2];
+      translationToOrigin[1][2] = -1 * translationToOrigin[1][2];
+      multiply3x1(translationToOrigin, temp, out);
 
       QColor pixel = img.pixelColor(x, y);
       uint red = pixel.red();
       uint green = pixel.green();
       uint blue = pixel.blue();
 
-      drawPixel(movingCanvas,
-                img_sizes[0] + out[0],
-                img_sizes[1] + out[1],
-                red,
-                green,
-                blue);
+      drawPixel(movingCanvas, out[0], out[1], red, green, blue);
     }
   }
 
