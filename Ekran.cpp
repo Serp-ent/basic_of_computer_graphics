@@ -5,6 +5,7 @@
 
 #include "layer.h"
 #include "movablepoint.h"
+#include <QCheckBox>
 #include <QComboBox>
 #include <QImage>
 #include <QLabel>
@@ -203,8 +204,47 @@ Ekran::Ekran(QWidget* parent)
   rotationSlider = new QSlider(Qt::Horizontal, this);
   rotationSlider->setRange(0, rotation_bound);
   rotationSlider->setValue(0);
-  rotationSlider->setGeometry(width() - 200 - 10, 110, 200, 30);
+  rotationSlider->setGeometry(width() - 200 - 10, 130, 200, 30);
   connect(rotationSlider, &QSlider::valueChanged, this, &Ekran::rotate_image);
+
+  // Add the checkbox for maintaining aspect ratio
+  QCheckBox* aspectRatioCheckBox = new QCheckBox("Maintain Aspect Ratio", this);
+  aspectRatioCheckBox->setGeometry(width() - 200 - 10, 240, 200, 30);
+  aspectRatioCheckBox->setChecked(false); // Default unchecked
+  connect(aspectRatioCheckBox, &QCheckBox::stateChanged, [this](int state) {
+    if (state == Qt::Checked) {
+      // Force scalingYSlider to match scalingXSlider
+      scalingYSlider->setValue(scalingXSlider->value());
+    }
+  });
+  // scaleXSlider
+  const int scale_bound = 200;
+  scalingXSlider = new QSlider(Qt::Horizontal, this);
+  scalingXSlider->setRange(0, scale_bound);
+  scalingXSlider->setValue(scale_bound / 2);
+  scalingXSlider->setGeometry(width() - 200 - 10, 180, 200, 30);
+  connect(scalingXSlider, &QSlider::valueChanged, this, &Ekran::scale_x);
+  // scaleYSlider
+  scalingYSlider = new QSlider(Qt::Horizontal, this);
+  scalingYSlider->setRange(0, scale_bound);
+  scalingYSlider->setValue(scale_bound / 2);
+  scalingYSlider->setGeometry(width() - 200 - 10, 210, 200, 30);
+  connect(scalingYSlider, &QSlider::valueChanged, this, &Ekran::scale_y);
+  // Connect the sliders for aspect ratio scaling
+  connect(scalingXSlider,
+          &QSlider::valueChanged,
+          [this, aspectRatioCheckBox](int value) {
+            if (aspectRatioCheckBox->isChecked()) {
+              scalingYSlider->setValue(value);
+            }
+          });
+  connect(scalingYSlider,
+          &QSlider::valueChanged,
+          [this, aspectRatioCheckBox](int value) {
+            if (aspectRatioCheckBox->isChecked()) {
+              scalingXSlider->setValue(value);
+            }
+          });
 }
 
 void
@@ -249,14 +289,12 @@ Ekran::paintEvent(QPaintEvent* event)
       float temp[3] = { img_pos[0] + (float)x,
                         img_pos[1] + (float)y,
                         1 }; // Coordinates of the current pixel
-      float out[3] = { 0, 0, 0 };
+      float out[3] = { 0, 0, 1 };
       /* 1 translation
        * multiply3x1(translation, temp, out); // Apply translation
        */
 
       /* 2 rotation
-       *
-       */
       // Step 1: Translate the pixel to the origin (image center)
       float translationToOrigin[3][3] = {
         { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
@@ -268,7 +306,26 @@ Ekran::paintEvent(QPaintEvent* event)
       // // Step 2: Rotate the pixel around the origin
       multiply3x1(rotation, out, temp);
 
-      // translation back to original position
+      // // Step 3: translation back to original position
+      translationToOrigin[0][2] = -1 * translationToOrigin[0][2];
+      translationToOrigin[1][2] = -1 * translationToOrigin[1][2];
+      multiply3x1(translationToOrigin, temp, out);
+       */
+
+      /* Scaling
+       */
+      // Step 1: Translate the pixel to the origin (image center)
+      float translationToOrigin[3][3] = {
+        { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
+        { 0, 1, -(img_pos[1] + img.height() / 2.0f) },
+        { 0, 0, 1 }
+      };
+      multiply3x1(translationToOrigin, temp, out);
+
+      // Step 2: Rotate the pixel around the origin
+      multiply3x1(scale_matrix, out, temp);
+
+      // Step 3: translation back to original position
       translationToOrigin[0][2] = -1 * translationToOrigin[0][2];
       translationToOrigin[1][2] = -1 * translationToOrigin[1][2];
       multiply3x1(translationToOrigin, temp, out);

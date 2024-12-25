@@ -125,8 +125,14 @@ private:
   float img_out_sizes[3];
   // transform
   float translation[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
-  // no rotation in the begin
+  // no rotation in the begining
   float rotation[3][3] = {
+    { 1, 0, 0 },
+    { 0, 1, 0 },
+    { 0, 0, 1 },
+  };
+  // on scaling in the begining
+  float scale_matrix[3][3] = {
     { 1, 0, 0 },
     { 0, 1, 0 },
     { 0, 0, 1 },
@@ -136,8 +142,8 @@ private:
   QSlider* translationX;
   QSlider* translationY;
   QSlider* rotationSlider;
-  QSlider* scalingX;
-  QSlider* scalingY;
+  QSlider* scalingXSlider;
+  QSlider* scalingYSlider;
   QSlider* shearingX;
   QSlider* shearingY;
   void translate_x(int value) { translation[0][2] = value; };
@@ -157,6 +163,28 @@ private:
     rotation[2][1] = 0;
     rotation[2][2] = 1;
   };
+
+  float scale_value(int value)
+  {
+    if (value < 0 || value > 200) {
+      qDebug() << "scale_value: value out of range, must be between 0 and 200.";
+      return 1.0f; // Default scale
+    }
+
+    // Calculate scaling factor relative to 100
+    return value / 100.0f;
+  }
+
+  void scale_x(int value)
+  {
+    qDebug() << "scale_x = " << value << '\n';
+    scale_matrix[0][0] = scale_value(value);
+  }
+  void scale_y(int value)
+  {
+    qDebug() << "scale_y = " << value << '\n';
+    scale_matrix[1][1] = scale_value(value);
+  }
 };
 
 #endif // EKRAN_H
