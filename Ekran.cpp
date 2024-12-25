@@ -262,6 +262,16 @@ Ekran::Ekran(QWidget* parent)
 }
 
 void
+copyMatrix(const float source[3][3], float destination[3][3])
+{
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      destination[i][j] = source[i][j];
+    }
+  }
+}
+
+void
 Ekran::paintEvent(QPaintEvent* event)
 {
   QPainter p(this);
@@ -298,37 +308,55 @@ Ekran::paintEvent(QPaintEvent* event)
   //* start of transform chain *************************************
   // translation
 
+  float translationToOrigin[3][3] = {
+    { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
+    { 0, 1, -(img_pos[1] + img.height() / 2.0f) },
+    { 0, 0, 1 }
+  };
+
+  float translationBack[3][3] = { { 1, 0, (img_pos[0] + img.width() / 2.0f) },
+                                  { 0, 1, (img_pos[1] + img.height() / 2.0f) },
+                                  { 0, 0, 1 } };
+
+  // Start with an identity matrix
+  float combinedMatrix[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+
+  // Combine the matrices in the correct order
+  float tempMatrix[3][3];
+
+  // 1. Translate to origin
+  multiply3x3(translationToOrigin, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 2. Apply scaling
+  multiply3x3(scale_matrix, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 3. Apply rotation
+  multiply3x3(rotation, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 4. Apply shearing
+  multiply3x3(shearing_matrix, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 5. Translate back to the original position
+  multiply3x3(translationBack, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
+  // 6. Apply the final translation
+  multiply3x3(translation, combinedMatrix, tempMatrix);
+  copyMatrix(tempMatrix, combinedMatrix);
+
   for (int y = 0; y < img.height(); ++y) {
     for (int x = 0; x < img.width(); ++x) {
-      float temp[3] = { img_pos[0] + (float)x,
-                        img_pos[1] + (float)y,
-                        1 }; // Pixel coordinates
-      float out[3] = { 0, 0, 1 };
+      float pixelPos[3] = { img_pos[0] + (float)x,
+                            img_pos[1] + (float)y,
+                            1 }; // Pixel coordinates
+      float transformedPos[3] = { 0, 0, 1 };
 
-      // 1. Translate the image to the origin (image center)
-      float translationToOrigin[3][3] = {
-        { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
-        { 0, 1, -(img_pos[1] + img.height() / 2.0f) },
-        { 0, 0, 1 }
-      };
-      multiply3x1(translationToOrigin, temp, out);
-
-      // 2. Apply scaling
-      multiply3x1(scale_matrix, out, temp);
-
-      // 3. Apply rotation
-      multiply3x1(rotation, temp, out);
-
-      // 4. Apply shearing
-      multiply3x1(shearing_matrix, out, temp);
-
-      // 5. Translate the image back to its original position
-      translationToOrigin[0][2] = -1 * translationToOrigin[0][2];
-      translationToOrigin[1][2] = -1 * translationToOrigin[1][2];
-      multiply3x1(translationToOrigin, temp, out);
-
-      // 6. Apply final translation
-      multiply3x1(translation, out, temp);
+      // Apply the combined transformation matrix
+      multiply3x1(combinedMatrix, pixelPos, transformedPos);
 
       // Retrieve pixel color and draw the transformed pixel
       QColor pixel = img.pixelColor(x, y);
@@ -336,9 +364,11 @@ Ekran::paintEvent(QPaintEvent* event)
       uint green = pixel.green();
       uint blue = pixel.blue();
 
-      drawPixel(movingCanvas, temp[0], temp[1], red, green, blue);
+      drawPixel(
+        movingCanvas, transformedPos[0], transformedPos[1], red, green, blue);
     }
   }
+
   p.drawImage(10, 10, movingCanvas);
 
   update();
