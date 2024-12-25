@@ -79,4 +79,19 @@ multiply3x3(float A[][3], float B[][3], float C[][3]);
 void
 multiply3x1(float A[][3], float B[], float C[]);
 
+uchar
+bilinear_interpolation_single(float a,
+                              float b,
+                              uchar p1,
+                              uchar p2,
+                              uchar p3,
+                              uchar p4);
+QColor
+bilinear_interpolation_color(float a,
+                             float b,
+                             const QColor& p1,
+                             const QColor& p2,
+                             const QColor& p3,
+                             const QColor& p4);
+
 #endif // TOOLS_H

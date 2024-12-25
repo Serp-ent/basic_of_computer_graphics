@@ -540,3 +540,42 @@ multiply3x3(float A[][3], float B[][3], float C[][3])
     }
   }
 }
+
+QColor bilinear_interpolation_color(
+    float a, float b, const QColor &p1, const QColor &p2, const QColor &p3, const QColor &p4)
+{
+    // Interpolate the red channel
+    float red_top = (1 - a) * p1.red() + a * p2.red();    // top row red channel interpolation
+    float red_bottom = (1 - a) * p3.red() + a * p4.red(); // bottom row red channel interpolation
+    float red_final = (1 - b) * red_top + b * red_bottom;
+
+    // Interpolate the green channel
+    float green_top = (1 - a) * p1.green() + a * p2.green(); // top row green channel interpolation
+    float green_bottom = (1 - a) * p3.green()
+                         + a * p4.green(); // bottom row green channel interpolation
+    float green_final = (1 - b) * green_top + b * green_bottom;
+
+    // Interpolate the blue channel
+    float blue_top = (1 - a) * p1.blue() + a * p2.blue(); // top row blue channel interpolation
+    float blue_bottom = (1 - a) * p3.blue()
+                        + a * p4.blue(); // bottom row blue channel interpolation
+    float blue_final = (1 - b) * blue_top + b * blue_bottom;
+
+    // Clamp the values between 0 and 255, and return the resulting color
+    return QColor(static_cast<int>(std::min(std::max(red_final, 0.0f), 255.0f)),
+                  static_cast<int>(std::min(std::max(green_final, 0.0f), 255.0f)),
+                  static_cast<int>(std::min(std::max(blue_final, 0.0f), 255.0f)));
+}
+
+uchar bilinear_interpolation_single(float a, float b, uchar p1, uchar p2, uchar p3, uchar p4)
+{
+    // Interpolate along x-axis (horizontal interpolation)
+    float top = (1 - a) * p1 + a * p2;    // top row interpolation
+    float bottom = (1 - a) * p3 + a * p4; // bottom row interpolation
+
+    // Interpolate along y-axis (vertical interpolation)
+    float final_value = (1 - b) * top + b * bottom;
+
+    // Clamp the value between 0 and 255
+    return static_cast<uchar>(std::min(std::max(final_value, 0.0f), 255.0f));
+}

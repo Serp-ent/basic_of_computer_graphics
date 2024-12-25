@@ -302,14 +302,10 @@ Ekran::paintEvent(QPaintEvent* event)
     for (int x = 0; x < img.width(); ++x) {
       float temp[3] = { img_pos[0] + (float)x,
                         img_pos[1] + (float)y,
-                        1 }; // Coordinates of the current pixel
+                        1 }; // Pixel coordinates
       float out[3] = { 0, 0, 1 };
-      /* [1] translation
-       * multiply3x1(translation, temp, out); // Apply translation
-       */
 
-      /* [2] rotation
-      // Step 1: Translate the pixel to the origin (image center)
+      // 1. Translate the image to the origin (image center)
       float translationToOrigin[3][3] = {
         { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
         { 0, 1, -(img_pos[1] + img.height() / 2.0f) },
@@ -317,46 +313,32 @@ Ekran::paintEvent(QPaintEvent* event)
       };
       multiply3x1(translationToOrigin, temp, out);
 
-      // // Step 2: Rotate the pixel around the origin
-      multiply3x1(rotation, out, temp);
-
-      // // Step 3: translation back to original position
-      translationToOrigin[0][2] = -1 * translationToOrigin[0][2];
-      translationToOrigin[1][2] = -1 * translationToOrigin[1][2];
-      multiply3x1(translationToOrigin, temp, out);
-       */
-
-      /* [3] Scaling [TODO: add antialiasing]
-       */
-      // Step 1: Translate the pixel to the origin (image center)
-      float translationToOrigin[3][3] = {
-        { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
-        { 0, 1, -(img_pos[1] + img.height() / 2.0f) },
-        { 0, 0, 1 }
-      };
-      multiply3x1(translationToOrigin, temp, out);
-
-      // Step 2: Rotate the pixel around the origin
+      // 2. Apply scaling
       multiply3x1(scale_matrix, out, temp);
 
-      // Step 3: translation back to original position
+      // 3. Apply rotation
+      multiply3x1(rotation, temp, out);
+
+      // 4. Apply shearing
+      multiply3x1(shearing_matrix, out, temp);
+
+      // 5. Translate the image back to its original position
       translationToOrigin[0][2] = -1 * translationToOrigin[0][2];
       translationToOrigin[1][2] = -1 * translationToOrigin[1][2];
       multiply3x1(translationToOrigin, temp, out);
 
-      /* [4] Shearing []
-      multiply3x1(shearing_matrix, temp, out); // Apply translation
-       */
+      // 6. Apply final translation
+      multiply3x1(translation, out, temp);
 
+      // Retrieve pixel color and draw the transformed pixel
       QColor pixel = img.pixelColor(x, y);
       uint red = pixel.red();
       uint green = pixel.green();
       uint blue = pixel.blue();
 
-      drawPixel(movingCanvas, out[0], out[1], red, green, blue);
+      drawPixel(movingCanvas, temp[0], temp[1], red, green, blue);
     }
   }
-
   p.drawImage(10, 10, movingCanvas);
 
   update();
