@@ -222,13 +222,13 @@ Ekran::Ekran(QWidget* parent)
   scalingXSlider = new QSlider(Qt::Horizontal, this);
   scalingXSlider->setRange(0, scale_bound);
   scalingXSlider->setValue(scale_bound / 2);
-  scalingXSlider->setGeometry(width() - 200 - 10, 180, 290, 30);
+  scalingXSlider->setGeometry(width() - 200 - 10, 180, 200, 30);
   connect(scalingXSlider, &QSlider::valueChanged, this, &Ekran::scale_x);
   // scaleYSlider
   scalingYSlider = new QSlider(Qt::Horizontal, this);
   scalingYSlider->setRange(0, scale_bound);
   scalingYSlider->setValue(scale_bound / 2);
-  scalingYSlider->setGeometry(width() - 200 - 10, 210, 320, 30);
+  scalingYSlider->setGeometry(width() - 200 - 10, 210, 200, 30);
   connect(scalingYSlider, &QSlider::valueChanged, this, &Ekran::scale_y);
   // Connect the sliders for aspect ratio scaling
   connect(scalingXSlider,
@@ -251,13 +251,13 @@ Ekran::Ekran(QWidget* parent)
   const int shearing_bound = 50;
   shearingXSlider->setRange(-shearing_bound, shearing_bound);
   shearingXSlider->setValue(0);
-  shearingXSlider->setGeometry(width() - 200 - 10, 260, 200, 30);
+  shearingXSlider->setGeometry(width() - 200 - 10, 290, 200, 30);
   connect(shearingXSlider, &QSlider::valueChanged, this, &Ekran::shear_x);
   // shearing Y;
   shearingXSlider = new QSlider(Qt::Horizontal, this);
   shearingXSlider->setRange(-shearing_bound, shearing_bound);
   shearingXSlider->setValue(0);
-  shearingXSlider->setGeometry(width() - 200 - 10, 290, 200, 30);
+  shearingXSlider->setGeometry(width() - 200 - 10, 320, 200, 30);
   connect(shearingXSlider, &QSlider::valueChanged, this, &Ekran::shear_y);
 }
 
@@ -327,6 +327,7 @@ Ekran::paintEvent(QPaintEvent* event)
        */
 
       /* [3] Scaling [TODO: add antialiasing]
+       */
       // Step 1: Translate the pixel to the origin (image center)
       float translationToOrigin[3][3] = {
         { 1, 0, -(img_pos[0] + img.width() / 2.0f) },
@@ -342,11 +343,10 @@ Ekran::paintEvent(QPaintEvent* event)
       translationToOrigin[0][2] = -1 * translationToOrigin[0][2];
       translationToOrigin[1][2] = -1 * translationToOrigin[1][2];
       multiply3x1(translationToOrigin, temp, out);
-      */
 
       /* [4] Shearing []
-       */
       multiply3x1(shearing_matrix, temp, out); // Apply translation
+       */
 
       QColor pixel = img.pixelColor(x, y);
       uint red = pixel.red();
