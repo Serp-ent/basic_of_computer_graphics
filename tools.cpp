@@ -670,7 +670,7 @@ applyTexturing(QImage& canvas,
       }
 
       // Set the pixel on the canvas
-      canvas.setPixelColor(x, y, color);
+      canvas.setPixelColor(x - img.width(), y, color);
     }
   }
 }

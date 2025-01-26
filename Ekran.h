@@ -39,6 +39,8 @@ protected:
     } else {
       // Disable bilinear interpolation
     }
+
+    update();
   }
 
 private:

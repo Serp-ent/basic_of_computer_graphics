@@ -174,9 +174,9 @@ Ekran::Ekran(QWidget* parent)
   leftTrianglePoints.push_back(QPoint(200, 300));
   leftTrianglePoints.push_back(QPoint(300, 100));
 
-  rightTrianglePoints.push_back(QPoint(500, 100));
-  rightTrianglePoints.push_back(QPoint(600, 300));
-  rightTrianglePoints.push_back(QPoint(700, 100));
+  rightTrianglePoints.push_back(QPoint(900, 100));
+  rightTrianglePoints.push_back(QPoint(1000, 300));
+  rightTrianglePoints.push_back(QPoint(1100, 100));
 }
 
 void
@@ -196,8 +196,8 @@ Ekran::paintEvent(QPaintEvent* event)
   p.fillRect(0, 0, width(), height(), Qt::black);
 
   // Draw the left image (original)
-  QRect leftImageRect(10, 10, 400, 400);
-  p.drawImage(leftImageRect, img);
+  // QRect leftImageRect(10, 10, 400, 400);
+  p.drawImage(0, 0, img);
 
   // Draw the points as red ellipses, centered on the points
   // Draw the triangle using the points in 'points'
@@ -227,8 +227,7 @@ Ekran::paintEvent(QPaintEvent* event)
                  bilinearCheckBox->isChecked());
 
   // Draw the right image (textured output using barycentric coordinates)
-  QRect rightImageRect(420, 10, 400, 400);
-  p.drawImage(rightImageRect, canvas);
+  p.drawImage(img.size().width(), 0, canvas);
   if (rightTrianglePoints.size() == 3) {
     for (const auto& point : rightTrianglePoints) {
       p.setBrush(Qt::red);
@@ -245,6 +244,17 @@ Ekran::paintEvent(QPaintEvent* event)
     p.setPen(QPen(Qt::red, 2)); // Red outline for the triangle
     p.drawPolygon(triangle);    // Draw the triangle
   }
+
+  // Draw a border around the canvas
+  int canvasX = img.size().width(); // The starting X position of the canvas
+  int canvasY = 0;                  // The starting Y position of the canvas
+  int canvasWidth = canvas.width();
+  int canvasHeight = canvas.height();
+  // Set pen for the border
+  p.setPen(QPen(Qt::white, 3)); // White border with thickness 3
+  p.setBrush(Qt::NoBrush);      // No fill for the border
+  p.drawRect(
+    canvasX, canvasY, canvasWidth, canvasHeight); // Draw the rectangle (border)
 
   // Optionally, you can implement barycentric coordinates texturing here
   // and update the canvas accordingly if the checkbox is checked
