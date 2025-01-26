@@ -269,9 +269,12 @@ Ekran::transform()
     pointsOut[i].second = tempy;
   }
 
-  // setVisibility();
-  drawCubeLines();
-  // drawCubeFaces();
+  if (showBackLines->isChecked()) {
+    drawCubeLines();
+  } else {
+    setVisibility();
+    drawCubeFaces();
+  }
 
   update();
 }
@@ -512,6 +515,7 @@ Ekran::drawCubeFaces()
 Ekran::Ekran(QWidget* parent)
   : QWidget{ parent }
 {
+  setWindowTitle("Kostka 3d");
   setMouseTracking(true);
   this->resize(800, 600);
 
@@ -528,6 +532,7 @@ Ekran::Ekran(QWidget* parent)
   labelSX = new QLabel("Skalowanie x");
   labelSY = new QLabel("Skalowanie y");
   labelSZ = new QLabel("Skalowanie z");
+  labelBackLines = new QLabel("Pokaż Linie");
 
   boxLayout->addWidget(labelTX);
   sliderTX->setRange(-350, 350);
@@ -624,6 +629,16 @@ Ekran::Ekran(QWidget* parent)
   });
 
   boxLayout->addWidget(sliderSZ);
+
+  QHBoxLayout* backLinesRow = new QHBoxLayout();
+  showBackLines = new QCheckBox(this);
+  showBackLines->setChecked(true);
+  QObject::connect(
+    showBackLines, &QCheckBox::stateChanged, [&]() { transform(); });
+  backLinesRow->addWidget(labelBackLines);
+  backLinesRow->addWidget(showBackLines);
+
+  boxLayout->addLayout(backLinesRow);
 
   grupa->setLayout(boxLayout);
 

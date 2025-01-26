@@ -96,6 +96,7 @@ private:
   QLabel* labelRX;
   QLabel* labelRY;
   QLabel* labelRZ;
+  QLabel* labelBackLines;
 
   QSlider* sliderTX = new QSlider(Qt::Horizontal);
   QSlider* sliderTY = new QSlider(Qt::Horizontal);
@@ -107,7 +108,8 @@ private:
   QSlider* sliderRY = new QSlider(Qt::Horizontal);
   QSlider* sliderRZ = new QSlider(Qt::Horizontal);
 
-  void czysc();
+  QCheckBox* showBackLines;
+
   void mxmMultiply(float a[4][4], float b[4][4]);
   void mxvMultiply(float a[4][4], float b[4]);
   void transform();
