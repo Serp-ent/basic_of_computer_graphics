@@ -69,34 +69,38 @@ private:
 
   float vOut[3];
 
-  struct point
+  struct Vec3
   {
     int x, y, z;
   };
+  struct Vec2
+  {
+    int x, y;
+  };
 
-  struct face
+  struct Face
   {
     int a, b, c, d;
     bool visible;
   };
 
-  std::vector<point> points;
-  std::vector<std::pair<int, int>> pointsOut;
-  std::vector<point> pointsFaces;
-  std::vector<face> faces;
+  std::vector<Vec3> points;
+  std::vector<Vec3> pointsFaces;
+  std::vector<Vec2> pointsOut;
+  std::vector<Face> faces;
 
   QGroupBox* grupa;
 
-  QLabel* labelTX;
-  QLabel* labelTY;
-  QLabel* labelTZ;
-  QLabel* labelSX;
-  QLabel* labelSY;
-  QLabel* labelSZ;
-  QLabel* labelRX;
-  QLabel* labelRY;
-  QLabel* labelRZ;
-  QLabel* labelBackLines;
+  QLabel* labelTX = new QLabel("Przesunięcie x");
+  QLabel* labelTY = new QLabel("Przesunięcie y");
+  QLabel* labelTZ = new QLabel("Przesunięcie z");
+  QLabel* labelRX = new QLabel("Obrót x");
+  QLabel* labelRY = new QLabel("Obrót y");
+  QLabel* labelRZ = new QLabel("Obrót z");
+  QLabel* labelSX = new QLabel("Skalowanie x");
+  QLabel* labelSY = new QLabel("Skalowanie y");
+  QLabel* labelSZ = new QLabel("Skalowanie z");
+  QLabel* labelBackLines = new QLabel("Pokaż Linie");
 
   QSlider* sliderTX = new QSlider(Qt::Horizontal);
   QSlider* sliderTY = new QSlider(Qt::Horizontal);
@@ -110,13 +114,11 @@ private:
 
   QCheckBox* showBackLines;
 
+  void loadCube();
   void mxmMultiply(float a[4][4], float b[4][4]);
   void mxvMultiply(float a[4][4], float b[4]);
   void transform();
-  void loadCube();
   void drawCubeLines();
-  void drawPixel(int x, int y, int r, int g, int b);
-  void ekran_drawLine(int x1, int y1, int x2, int y2);
   void setVisibility();
   void drawCubeFaces();
 };
