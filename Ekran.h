@@ -24,17 +24,6 @@ public:
 protected:
   void paintEvent(QPaintEvent* event) override;
   void mouseMoveEvent(QMouseEvent* event) override;
-
-  void drawTexturedTriangle(QImage& canvas,
-                            const QPoint& p1,
-                            const QPoint& p2,
-                            const QPoint& p3,
-                            const QImage& texture);
-  float barycentricArea(const QPoint& p1,
-                        const QPoint& p2,
-                        const QPoint& p3,
-                        const QPoint& p);
-
 signals:
 
   // QWidget interface
@@ -64,7 +53,8 @@ private:
   // std::vector<MovablePoint> points;
 
   // scan line
-  std::vector<QPoint> points;
+  std::vector<QPoint> leftTrianglePoints;
+  std::vector<QPoint> rightTrianglePoints;
 
   QImage img;
   QCheckBox* bilinearCheckBox;

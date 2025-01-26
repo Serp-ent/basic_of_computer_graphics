@@ -541,41 +541,159 @@ multiply3x3(float A[][3], float B[][3], float C[][3])
   }
 }
 
-QColor bilinear_interpolation_color(
-    float a, float b, const QColor &p1, const QColor &p2, const QColor &p3, const QColor &p4)
+QColor
+bilinear_interpolation_color(float a,
+                             float b,
+                             const QColor& p1,
+                             const QColor& p2,
+                             const QColor& p3,
+                             const QColor& p4)
 {
-    // Interpolate the red channel
-    float red_top = (1 - a) * p1.red() + a * p2.red();    // top row red channel interpolation
-    float red_bottom = (1 - a) * p3.red() + a * p4.red(); // bottom row red channel interpolation
-    float red_final = (1 - b) * red_top + b * red_bottom;
+  // Interpolate the red channel
+  float red_top =
+    (1 - a) * p1.red() + a * p2.red(); // top row red channel interpolation
+  float red_bottom =
+    (1 - a) * p3.red() + a * p4.red(); // bottom row red channel interpolation
+  float red_final = (1 - b) * red_top + b * red_bottom;
 
-    // Interpolate the green channel
-    float green_top = (1 - a) * p1.green() + a * p2.green(); // top row green channel interpolation
-    float green_bottom = (1 - a) * p3.green()
-                         + a * p4.green(); // bottom row green channel interpolation
-    float green_final = (1 - b) * green_top + b * green_bottom;
+  // Interpolate the green channel
+  float green_top = (1 - a) * p1.green() +
+                    a * p2.green(); // top row green channel interpolation
+  float green_bottom = (1 - a) * p3.green() +
+                       a * p4.green(); // bottom row green channel interpolation
+  float green_final = (1 - b) * green_top + b * green_bottom;
 
-    // Interpolate the blue channel
-    float blue_top = (1 - a) * p1.blue() + a * p2.blue(); // top row blue channel interpolation
-    float blue_bottom = (1 - a) * p3.blue()
-                        + a * p4.blue(); // bottom row blue channel interpolation
-    float blue_final = (1 - b) * blue_top + b * blue_bottom;
+  // Interpolate the blue channel
+  float blue_top =
+    (1 - a) * p1.blue() + a * p2.blue(); // top row blue channel interpolation
+  float blue_bottom = (1 - a) * p3.blue() +
+                      a * p4.blue(); // bottom row blue channel interpolation
+  float blue_final = (1 - b) * blue_top + b * blue_bottom;
 
-    // Clamp the values between 0 and 255, and return the resulting color
-    return QColor(static_cast<int>(std::min(std::max(red_final, 0.0f), 255.0f)),
-                  static_cast<int>(std::min(std::max(green_final, 0.0f), 255.0f)),
-                  static_cast<int>(std::min(std::max(blue_final, 0.0f), 255.0f)));
+  // Clamp the values between 0 and 255, and return the resulting color
+  return QColor(static_cast<int>(std::min(std::max(red_final, 0.0f), 255.0f)),
+                static_cast<int>(std::min(std::max(green_final, 0.0f), 255.0f)),
+                static_cast<int>(std::min(std::max(blue_final, 0.0f), 255.0f)));
 }
 
-uchar bilinear_interpolation_single(float a, float b, uchar p1, uchar p2, uchar p3, uchar p4)
+uchar
+bilinear_interpolation_single(float a,
+                              float b,
+                              uchar p1,
+                              uchar p2,
+                              uchar p3,
+                              uchar p4)
 {
-    // Interpolate along x-axis (horizontal interpolation)
-    float top = (1 - a) * p1 + a * p2;    // top row interpolation
-    float bottom = (1 - a) * p3 + a * p4; // bottom row interpolation
+  // Interpolate along x-axis (horizontal interpolation)
+  float top = (1 - a) * p1 + a * p2;    // top row interpolation
+  float bottom = (1 - a) * p3 + a * p4; // bottom row interpolation
 
-    // Interpolate along y-axis (vertical interpolation)
-    float final_value = (1 - b) * top + b * bottom;
+  // Interpolate along y-axis (vertical interpolation)
+  float final_value = (1 - b) * top + b * bottom;
 
-    // Clamp the value between 0 and 255
-    return static_cast<uchar>(std::min(std::max(final_value, 0.0f), 255.0f));
+  // Clamp the value between 0 and 255
+  return static_cast<uchar>(std::min(std::max(final_value, 0.0f), 255.0f));
+}
+
+void
+applyTexturing(QImage& canvas,
+               const QImage& img,
+               const std::vector<QPoint>& leftTrianglePoints,
+               const std::vector<QPoint>& rightTrianglePoints,
+               bool useBilinearInterpolation)
+{
+  if (leftTrianglePoints.size() < 3 || rightTrianglePoints.size() < 3)
+    return;
+
+  // Define the triangle vertices
+  QPoint A = leftTrianglePoints[0];
+  QPoint B = leftTrianglePoints[1];
+  QPoint C = leftTrianglePoints[2];
+
+  QPoint At = rightTrianglePoints[0];
+  QPoint Bt = rightTrianglePoints[1];
+  QPoint Ct = rightTrianglePoints[2];
+
+  // Compute bounding box for the textured triangle
+  int minX = std::min({ At.x(), Bt.x(), Ct.x() });
+  int maxX = std::max({ At.x(), Bt.x(), Ct.x() });
+  int minY = std::min({ At.y(), Bt.y(), Ct.y() });
+  int maxY = std::max({ At.y(), Bt.y(), Ct.y() });
+
+  for (int x = minX; x <= maxX; ++x) {
+    for (int y = minY; y <= maxY; ++y) {
+      QPoint P(x, y);
+
+      // Calculate barycentric coordinates for P
+      float u, v, w;
+      if (!calculateBarycentric(At, Bt, Ct, P, u, v, w))
+        continue; // Skip if P is outside the triangle
+
+      // Skip if P is outside the triangle even after barycentric calculation
+      if (u < 0 || v < 0 || w < 0)
+        continue;
+
+      // Map barycentric coordinates to the original triangle
+      float tx = u * A.x() + v * B.x() + w * C.x();
+      float ty = u * A.y() + v * B.y() + w * C.y();
+
+      QColor color;
+
+      if (useBilinearInterpolation) {
+        // Perform bilinear interpolation
+        int x1 = std::floor(tx);
+        int x2 = std::ceil(tx);
+        int y1 = std::floor(ty);
+        int y2 = std::ceil(ty);
+
+        // Clamp texture coordinates to the image bounds
+        x1 = std::clamp(x1, 0, img.width() - 1);
+        x2 = std::clamp(x2, 0, img.width() - 1);
+        y1 = std::clamp(y1, 0, img.height() - 1);
+        y2 = std::clamp(y2, 0, img.height() - 1);
+
+        float a = tx - x1; // Horizontal weight
+        float b = ty - y1; // Vertical weight
+
+        QColor p1 = img.pixelColor(x1, y1);
+        QColor p2 = img.pixelColor(x2, y1);
+        QColor p3 = img.pixelColor(x1, y2);
+        QColor p4 = img.pixelColor(x2, y2);
+
+        color = bilinear_interpolation_color(a, b, p1, p2, p3, p4);
+      } else {
+        // Use nearest neighbor sampling
+        int texX = std::round(tx);
+        int texY = std::round(ty);
+        color = img.pixelColor(std::clamp(texX, 0, img.width() - 1),
+                               std::clamp(texY, 0, img.height() - 1));
+      }
+
+      // Set the pixel on the canvas
+      canvas.setPixelColor(x, y, color);
+    }
+  }
+}
+
+bool
+calculateBarycentric(const QPoint& A,
+                     const QPoint& B,
+                     const QPoint& C,
+                     const QPoint& P,
+                     float& u,
+                     float& v,
+                     float& w)
+{
+  float denominator =
+    (B.y() - C.y()) * (A.x() - C.x()) + (C.x() - B.x()) * (A.y() - C.y());
+  if (denominator == 0.0f)
+    return false; // Degenerate triangle
+
+  u = ((B.y() - C.y()) * (P.x() - C.x()) + (C.x() - B.x()) * (P.y() - C.y())) /
+      denominator;
+  v = ((C.y() - A.y()) * (P.x() - C.x()) + (A.x() - C.x()) * (P.y() - C.y())) /
+      denominator;
+  w = 1.0f - u - v;
+
+  return (u >= 0 && v >= 0 && w >= 0);
 }

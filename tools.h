@@ -94,4 +94,19 @@ bilinear_interpolation_color(float a,
                              const QColor& p3,
                              const QColor& p4);
 
+void
+applyTexturing(QImage& canvas,
+               const QImage& img,
+               const std::vector<QPoint>& leftTrianglePoints,
+               const std::vector<QPoint>& rightTrianglePoints,
+               bool useBilinearInterpolation);
+bool
+calculateBarycentric(const QPoint& A,
+                     const QPoint& B,
+                     const QPoint& C,
+                     const QPoint& P,
+                     float& u,
+                     float& v,
+                     float& w);
+
 #endif // TOOLS_H

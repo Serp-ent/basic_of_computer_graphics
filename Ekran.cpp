@@ -22,12 +22,20 @@ Ekran::mousePressEvent(QMouseEvent* event)
   if (event->button() == Qt::LeftButton) {
     // Check if any of the predefined points is near the mouse click
     bool pointNearby = false;
-    for (auto& point : points) {
+    for (auto& point : leftTrianglePoints) {
       if (euclideanSquare(pressStart, point) <=
           MovablePoint::POINT_RADIUS * MovablePoint::POINT_RADIUS) {
         pointNearby = true;
         selectedPoint = &point;
-        break;
+        return;
+      }
+    }
+    for (auto& point : rightTrianglePoints) {
+      if (euclideanSquare(pressStart, point) <=
+          MovablePoint::POINT_RADIUS * MovablePoint::POINT_RADIUS) {
+        pointNearby = true;
+        selectedPoint = &point;
+        return;
       }
     }
   }
@@ -162,9 +170,13 @@ Ekran::Ekran(QWidget* parent)
   setLayout(layout);
 
   // Initialize triangle points
-  points.push_back(QPoint(100, 100));
-  points.push_back(QPoint(200, 300));
-  points.push_back(QPoint(300, 100));
+  leftTrianglePoints.push_back(QPoint(100, 100));
+  leftTrianglePoints.push_back(QPoint(200, 300));
+  leftTrianglePoints.push_back(QPoint(300, 100));
+
+  rightTrianglePoints.push_back(QPoint(500, 100));
+  rightTrianglePoints.push_back(QPoint(600, 300));
+  rightTrianglePoints.push_back(QPoint(700, 100));
 }
 
 void
@@ -178,48 +190,6 @@ copyMatrix(const float source[3][3], float destination[3][3])
 }
 
 void
-Ekran::drawTexturedTriangle(QImage& canvas,
-                            const QPoint& p1,
-                            const QPoint& p2,
-                            const QPoint& p3,
-                            const QImage& texture)
-{
-  int minX = std::min({ p1.x(), p2.x(), p3.x() });
-  int maxX = std::max({ p1.x(), p2.x(), p3.x() });
-  int minY = std::min({ p1.y(), p2.y(), p3.y() });
-  int maxY = std::max({ p1.y(), p2.y(), p3.y() });
-
-  for (int y = minY; y <= maxY; ++y) {
-    for (int x = minX; x <= maxX; ++x) {
-      QPoint p(x, y);
-      float areaTotal = barycentricArea(p1, p2, p3, p);
-      if (areaTotal > 0) {
-        float alpha = barycentricArea(p, p2, p3, p1) / areaTotal;
-        float beta = barycentricArea(p1, p, p3, p2) / areaTotal;
-        float gamma = barycentricArea(p1, p2, p, p3) / areaTotal;
-
-        int texX = alpha * texture.width();
-        int texY = beta * texture.height();
-        QColor texColor = texture.pixelColor(texX, texY);
-
-        canvas.setPixelColor(x, y, texColor);
-      }
-    }
-  }
-}
-
-float
-Ekran::barycentricArea(const QPoint& p1,
-                       const QPoint& p2,
-                       const QPoint& p3,
-                       const QPoint& p)
-{
-  return abs((p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) +
-              p3.x() * (p1.y() - p2.y())) /
-             2.0);
-}
-
-void
 Ekran::paintEvent(QPaintEvent* event)
 {
   QPainter p(this);
@@ -230,17 +200,17 @@ Ekran::paintEvent(QPaintEvent* event)
   p.drawImage(leftImageRect, img);
 
   // Draw the points as red ellipses, centered on the points
-  for (const auto& point : points) {
-    p.setBrush(Qt::red);
-    constexpr int radius = MovablePoint::POINT_RADIUS;
-    p.drawEllipse(point - QPoint(radius / 2, radius / 2), radius, radius);
-  }
-
   // Draw the triangle using the points in 'points'
-  if (points.size() == 3) {
+  if (leftTrianglePoints.size() == 3) {
+    for (const auto& point : leftTrianglePoints) {
+      p.setBrush(Qt::red);
+      constexpr int radius = MovablePoint::POINT_RADIUS;
+      p.drawEllipse(point - QPoint(radius / 2, radius / 2), radius, radius);
+    }
+
     // Convert std::vector<QPoint> to QPolygon
     QPolygon triangle;
-    for (const auto& point : points) {
+    for (const auto& point : leftTrianglePoints) {
       triangle << point; // Add points to QPolygon
     }
 
@@ -249,9 +219,32 @@ Ekran::paintEvent(QPaintEvent* event)
     p.drawPolygon(triangle);    // Draw the triangle
   }
 
+  canvas.fill(Qt::black); // Clear the canvas to avoid leftover pixels
+  applyTexturing(canvas,
+                 img,
+                 leftTrianglePoints,
+                 rightTrianglePoints,
+                 bilinearCheckBox->isChecked());
+
   // Draw the right image (textured output using barycentric coordinates)
   QRect rightImageRect(420, 10, 400, 400);
   p.drawImage(rightImageRect, canvas);
+  if (rightTrianglePoints.size() == 3) {
+    for (const auto& point : rightTrianglePoints) {
+      p.setBrush(Qt::red);
+      constexpr int radius = MovablePoint::POINT_RADIUS;
+      p.drawEllipse(point - QPoint(radius / 2, radius / 2), radius, radius);
+    }
+    // Convert std::vector<QPoint> to QPolygon
+    QPolygon triangle;
+    for (const auto& point : rightTrianglePoints) {
+      triangle << point; // Add points to QPolygon
+    }
+
+    p.setBrush(Qt::NoBrush);    // No fill for the triangle
+    p.setPen(QPen(Qt::red, 2)); // Red outline for the triangle
+    p.drawPolygon(triangle);    // Draw the triangle
+  }
 
   // Optionally, you can implement barycentric coordinates texturing here
   // and update the canvas accordingly if the checkbox is checked
