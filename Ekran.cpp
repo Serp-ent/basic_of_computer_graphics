@@ -19,26 +19,26 @@ Ekran::mousePressEvent(QMouseEvent* event)
   mousePresssed = true;
   pressStart = event->pos();
 
-  if (event->button() == Qt::LeftButton) {
-    // Check if any of the predefined points is near the mouse click
-    bool pointNearby = false;
-    for (auto& point : leftTrianglePoints) {
-      if (euclideanSquare(pressStart, point) <=
-          MovablePoint::POINT_RADIUS * MovablePoint::POINT_RADIUS) {
-        pointNearby = true;
-        selectedPoint = &point;
-        return;
-      }
-    }
-    for (auto& point : rightTrianglePoints) {
-      if (euclideanSquare(pressStart, point) <=
-          MovablePoint::POINT_RADIUS * MovablePoint::POINT_RADIUS) {
-        pointNearby = true;
-        selectedPoint = &point;
-        return;
-      }
-    }
-  }
+  // if (event->button() == Qt::LeftButton) {
+  //   // Check if any of the predefined points is near the mouse click
+  //   bool pointNearby = false;
+  //   for (auto& point : leftTrianglePoints) {
+  //     if (euclideanSquare(pressStart, point) <=
+  //         MovablePoint::POINT_RADIUS * MovablePoint::POINT_RADIUS) {
+  //       pointNearby = true;
+  //       selectedPoint = &point;
+  //       return;
+  //     }
+  //   }
+  //   for (auto& point : rightTrianglePoints) {
+  //     if (euclideanSquare(pressStart, point) <=
+  //         MovablePoint::POINT_RADIUS * MovablePoint::POINT_RADIUS) {
+  //       pointNearby = true;
+  //       selectedPoint = &point;
+  //       return;
+  //     }
+  //   }
+  // }
 
   // if (event->button() == Qt::MiddleButton) {
   //   flood_fill(this->canvas, event->pos(), Qt::black, Qt::white);
@@ -122,61 +122,524 @@ Ekran::mouseReleaseEvent(QMouseEvent* event)
   }
 }
 
+void
+Ekran::mxmMultiply(float a[4][4], float b[4][4])
+{
+  float c[4][4];
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      c[i][j] = b[i][j];
+    }
+  }
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      float suma = 0.0;
+      for (int k = 0; k < 4; k++) {
+        suma += a[i][k] * c[k][j];
+      }
+      mP[i][j] = suma;
+    }
+  }
+}
+
+void
+Ekran::mxvMultiply(float a[4][4], float b[4])
+{
+  for (int i = 0; i < 4; i++) {
+    vP[i] = 0;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      vP[i] += (a[i][j] * b[j]);
+    }
+  }
+}
+
+void
+Ekran::transform()
+{
+  float a[4][4];
+  float c[4]; //[3];
+
+  float t1[4][4]; // z + 100
+
+  float t[4][4];  // move
+  float rx[4][4]; // rotation
+  float ry[4][4];
+  float rz[4][4];
+  float s[4][4]; // scaling
+
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      a[i][j] = 0;
+      t1[i][j] = 0;
+      t[i][j] = 0;
+      rx[i][j] = 0;
+      ry[i][j] = 0;
+      rz[i][j] = 0;
+      s[i][j] = 0;
+    }
+    c[i] = 0;
+  }
+
+  t[0][0] = 1;
+  t[1][1] = 1;
+  t[2][2] = 1;
+  t[3][3] = 1;
+
+  t[0][3] = sliderTXValue;
+  t[1][3] = sliderTYValue;
+  t[2][3] = sliderTZValue;
+
+  t1[0][0] = 1; // T(z+500)
+  t1[1][1] = 1;
+  t1[2][2] = 1;
+  t1[3][3] = 1;
+
+  t1[0][3] = 1;
+  t1[1][3] = 1;
+  t1[2][3] = 500;
+
+  rz[0][0] = cos(sliderRZValue * M_PI / 180); // R
+  rz[0][1] = -sin(sliderRZValue * M_PI / 180);
+  rz[1][0] = sin(sliderRZValue * M_PI / 180);
+  rz[1][1] = cos(sliderRZValue * M_PI / 180);
+  rz[2][2] = 1;
+  rz[3][3] = 1;
+
+  rx[0][0] = 1;
+  rx[1][1] = cos(sliderRXValue * M_PI / 180);
+  rx[1][2] = -sin(sliderRXValue * M_PI / 180);
+  rx[2][1] = sin(sliderRXValue * M_PI / 180);
+  rx[2][2] = cos(sliderRXValue * M_PI / 180);
+  rx[3][3] = 1;
+
+  ry[0][0] = cos(sliderRYValue * M_PI / 180);
+  ry[0][2] = sin(sliderRYValue * M_PI / 180);
+  ry[1][1] = 1;
+  ry[2][0] = -sin(sliderRYValue * M_PI / 180);
+  ry[2][2] = cos(sliderRYValue * M_PI / 180);
+  ry[3][3] = 1;
+
+  s[0][0] = sliderSXValue / 100.0;
+  s[1][1] = sliderSYValue / 100.0;
+  s[2][2] = sliderSZValue / 100.0;
+  s[3][3] = 1;
+
+  a[0][0] = 1;
+  a[1][1] = 1;
+  a[2][2] = 1;
+  a[3][3] = 1;
+
+  mxmMultiply(s, a);
+  mxmMultiply(rx, mP);
+  mxmMultiply(ry, mP);
+  mxmMultiply(rz, mP);
+  mxmMultiply(t, mP);
+  mxmMultiply(t1, mP);
+
+  canvas.fill(Qt::black);
+
+  float cx, cy;
+  cx = szer / 2;
+  cy = wys / 2;
+  f = 1000;
+  c[3] = 1;
+
+  for (int i = 0; i < points.size(); i++) {
+    c[0] = points[i].x;
+    c[1] = points[i].y;
+    c[2] = points[i].z;
+
+    mxvMultiply(mP, c);
+
+    if (vP[2] < 0) {
+      vP[2] = 1;
+    }
+
+    point p = { (int)vP[0], (int)vP[1], (int)vP[2] };
+    pointsFaces[i] = p;
+
+    float tempx, tempy;
+    tempx = (vP[0] * f) / vP[2] + cx;
+    tempy = (vP[1] * f) / vP[2] + cy;
+
+    pointsOut[i].first = tempx;
+    pointsOut[i].second = tempy;
+  }
+
+  // setVisibility();
+  drawCubeLines();
+  // drawCubeFaces();
+
+  update();
+}
+
+void
+Ekran::loadCube()
+{
+  int r = 100;
+
+  point p1 = { -r, r, r };
+  points.push_back(p1);
+  pointsFaces.push_back(p1);
+  pointsOut.push_back(std::make_pair(-r, r));
+  point p2 = { r, r, r };
+  points.push_back(p2);
+  pointsOut.push_back(std::make_pair(r, r));
+  pointsFaces.push_back(p2);
+  point p3 = { r, -r, r };
+  points.push_back(p3);
+  pointsFaces.push_back(p3);
+  pointsOut.push_back(std::make_pair(r, -r));
+  point p4 = { -r, -r, r };
+  points.push_back(p4);
+  pointsFaces.push_back(p4);
+  pointsOut.push_back(std::make_pair(-r, -r));
+
+  point p5 = { -r, r, -r };
+  points.push_back(p5);
+  pointsFaces.push_back(p5);
+  pointsOut.push_back(std::make_pair(-r, r));
+  point p6 = { r, r, -r };
+  points.push_back(p6);
+  pointsFaces.push_back(p6);
+  pointsOut.push_back(std::make_pair(r, r));
+  point p7 = { r, -r, -r };
+  points.push_back(p7);
+  pointsFaces.push_back(p7);
+  pointsOut.push_back(std::make_pair(r, -r));
+  point p8 = { -r, -r, -r };
+  points.push_back(p8);
+  pointsFaces.push_back(p8);
+  pointsOut.push_back(std::make_pair(-r, -r));
+
+  face f1 = { 1, 0, 3, 2, false };
+  faces.push_back(f1);
+  face f2 = { 4, 5, 6, 7, false };
+  faces.push_back(f2);
+  face f3 = { 5, 1, 2, 6, false };
+  faces.push_back(f3);
+  face f4 = { 0, 4, 7, 3, false };
+  faces.push_back(f4);
+  face f5 = { 0, 1, 5, 4, false };
+  faces.push_back(f5);
+  face f6 = { 7, 6, 2, 3, false };
+  faces.push_back(f6);
+}
+
+void
+Ekran::drawCubeLines()
+{
+  drawLine(canvas,
+           pointsOut[0].first,
+           pointsOut[0].second,
+           pointsOut[1].first,
+           pointsOut[1].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[2].first,
+           pointsOut[2].second,
+           pointsOut[1].first,
+           pointsOut[1].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[2].first,
+           pointsOut[2].second,
+           pointsOut[3].first,
+           pointsOut[3].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[0].first,
+           pointsOut[0].second,
+           pointsOut[3].first,
+           pointsOut[3].second,
+           255,
+           255,
+           255);
+
+  drawLine(canvas,
+           pointsOut[5].first,
+           pointsOut[5].second,
+           pointsOut[4].first,
+           pointsOut[4].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[5].first,
+           pointsOut[5].second,
+           pointsOut[6].first,
+           pointsOut[6].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[7].first,
+           pointsOut[7].second,
+           pointsOut[6].first,
+           pointsOut[6].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[7].first,
+           pointsOut[7].second,
+           pointsOut[4].first,
+           pointsOut[4].second,
+           255,
+           255,
+           255);
+
+  drawLine(canvas,
+           pointsOut[0].first,
+           pointsOut[0].second,
+           pointsOut[4].first,
+           pointsOut[4].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[1].first,
+           pointsOut[1].second,
+           pointsOut[5].first,
+           pointsOut[5].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[2].first,
+           pointsOut[2].second,
+           pointsOut[6].first,
+           pointsOut[6].second,
+           255,
+           255,
+           255);
+  drawLine(canvas,
+           pointsOut[3].first,
+           pointsOut[3].second,
+           pointsOut[7].first,
+           pointsOut[7].second,
+           255,
+           255,
+           255);
+}
+
+void
+Ekran::setVisibility()
+{
+  for (int i = 0; i < faces.size(); i++) {
+    float v1[3], v2[3];
+
+    v2[0] = pointsFaces[faces[i].c].x - pointsFaces[faces[i].d].x;
+    v2[1] = pointsFaces[faces[i].c].y - pointsFaces[faces[i].d].y;
+    v2[2] = pointsFaces[faces[i].c].z - pointsFaces[faces[i].d].z;
+
+    v1[0] = pointsFaces[faces[i].a].x - pointsFaces[faces[i].d].x;
+    v1[1] = pointsFaces[faces[i].a].y - pointsFaces[faces[i].d].y;
+    v1[2] = pointsFaces[faces[i].a].z - pointsFaces[faces[i].d].z;
+
+    vOut[0] = v1[1] * v2[2] - v1[2] * v2[1];
+    vOut[1] = v1[2] * v2[0] - v1[0] * v2[2];
+    vOut[2] = v1[0] * v2[1] - v1[1] * v2[0];
+
+    float vCam[3];
+    vCam[0] = -pointsFaces[faces[i].d].x;
+    vCam[1] = -pointsFaces[faces[i].d].y;
+    vCam[2] = -pointsFaces[faces[i].d].z;
+
+    float cos =
+      (vOut[0] * vCam[0] + vOut[1] * vCam[1] + vOut[2] * vCam[2]) /
+      (std::sqrt(vOut[0] * vOut[0] + vOut[1] * vOut[1] + vOut[2] * vOut[2]) *
+       std::sqrt(vCam[0] * vCam[0] + vCam[1] * vCam[1] + vCam[2] * vCam[2]));
+
+    if (cos > 0) {
+      faces[i].visible = true;
+    } else {
+      faces[i].visible = false;
+    }
+  }
+}
+
+void
+Ekran::drawCubeFaces()
+{
+  for (int i = 0; i < faces.size(); i++) {
+    if (faces[i].visible == true) {
+      drawLine(canvas,
+               pointsOut[faces[i].a].first,
+               pointsOut[faces[i].a].second,
+               pointsOut[faces[i].b].first,
+               pointsOut[faces[i].b].second,
+               255,
+               255,
+               255);
+      drawLine(canvas,
+               pointsOut[faces[i].b].first,
+               pointsOut[faces[i].b].second,
+               pointsOut[faces[i].c].first,
+               pointsOut[faces[i].c].second,
+               255,
+               255,
+               255);
+      drawLine(canvas,
+               pointsOut[faces[i].c].first,
+               pointsOut[faces[i].c].second,
+               pointsOut[faces[i].d].first,
+               pointsOut[faces[i].d].second,
+               255,
+               255,
+               255);
+      drawLine(canvas,
+               pointsOut[faces[i].a].first,
+               pointsOut[faces[i].a].second,
+               pointsOut[faces[i].d].first,
+               pointsOut[faces[i].d].second,
+               255,
+               255,
+               255);
+    }
+  }
+}
+
 Ekran::Ekran(QWidget* parent)
   : QWidget{ parent }
 {
   setMouseTracking(true);
-  this->resize(1000, 600);
+  this->resize(800, 600);
+
+  grupa = new QGroupBox(this);
+  grupa->setGeometry(QRect(650, 50, 137, 500));
+  QVBoxLayout* boxLayout = new QVBoxLayout(this);
+
+  labelTX = new QLabel("Przesunięcie x");
+  labelTY = new QLabel("Przesunięcie y");
+  labelTZ = new QLabel("Przesunięcie z");
+  labelRX = new QLabel("Obrót x");
+  labelRY = new QLabel("Obrót y");
+  labelRZ = new QLabel("Obrót z");
+  labelSX = new QLabel("Skalowanie x");
+  labelSY = new QLabel("Skalowanie y");
+  labelSZ = new QLabel("Skalowanie z");
+
+  boxLayout->addWidget(labelTX);
+  sliderTX->setRange(-350, 350);
+  sliderTX->setValue(0);
+  sliderTXValue = 0;
+  QObject::connect(sliderTX, &QSlider::valueChanged, [&](int i) {
+    sliderTXValue = i;
+    transform();
+  });
+  boxLayout->addWidget(sliderTX);
+
+  boxLayout->addWidget(labelTY);
+  sliderTY->setRange(-350, 350);
+  sliderTY->setValue(0);
+  sliderTYValue = 0;
+  QObject::connect(sliderTY, &QSlider::valueChanged, [&](int i) {
+    sliderTYValue = i;
+    transform();
+  });
+  boxLayout->addWidget(sliderTY);
+
+  boxLayout->addWidget(labelTZ);
+  sliderTZ->setRange(-350, 350);
+  sliderTZ->setValue(0);
+  sliderTZValue = 0;
+  QObject::connect(sliderTZ, &QSlider::valueChanged, [&](int i) {
+    sliderTZValue = i;
+    transform();
+  });
+  boxLayout->addWidget(sliderTZ);
+
+  boxLayout->addWidget(labelRX);
+  sliderRX->setRange(0, 360);
+  sliderRX->setValue(0);
+  sliderRXValue = 0;
+  QObject::connect(sliderRX, &QSlider::valueChanged, [&](int i) {
+    sliderRXValue = i;
+    transform();
+  });
+
+  boxLayout->addWidget(sliderRX);
+
+  boxLayout->addWidget(labelRY);
+  sliderRY->setRange(0, 360);
+  sliderRY->setValue(0);
+  sliderRYValue = 0;
+  QObject::connect(sliderRY, &QSlider::valueChanged, [&](int i) {
+    sliderRYValue = i;
+    transform();
+  });
+
+  boxLayout->addWidget(sliderRY);
+
+  boxLayout->addWidget(labelRZ);
+  sliderRZ->setRange(0, 360);
+  sliderRZ->setValue(0);
+  sliderRZValue = 0;
+  QObject::connect(sliderRZ, &QSlider::valueChanged, [&](int i) {
+    sliderRZValue = i;
+    transform();
+  });
+
+  boxLayout->addWidget(sliderRZ);
+
+  boxLayout->addWidget(labelSX);
+  sliderSX->setRange(0, 100);
+  sliderSX->setValue(50);
+  sliderSXValue = 50;
+  QObject::connect(sliderSX, &QSlider::valueChanged, [&](int i) {
+    sliderSXValue = i;
+    transform();
+  });
+
+  boxLayout->addWidget(sliderSX);
+
+  boxLayout->addWidget(labelSY);
+  sliderSY->setRange(0, 100);
+  sliderSY->setValue(50);
+  sliderSYValue = 50;
+  QObject::connect(sliderSY, &QSlider::valueChanged, [&](int i) {
+    sliderSYValue = i;
+    transform();
+  });
+
+  boxLayout->addWidget(sliderSY);
+
+  boxLayout->addWidget(labelSZ);
+  sliderSZ->setRange(0, 100);
+  sliderSZ->setValue(50);
+  sliderSZValue = 50;
+  QObject::connect(sliderSZ, &QSlider::valueChanged, [&](int i) {
+    sliderSZValue = i;
+    transform();
+  });
+
+  boxLayout->addWidget(sliderSZ);
+
+  grupa->setLayout(boxLayout);
+
+  szer = 600;
+  wys = 600;
+  poczX = 25;
+  poczY = 25;
 
   // Initialize the canvas
-  canvas = QImage(width() - 200, height() - 50, QImage::Format_RGB32);
-  canvas.fill(Qt::lightGray);
+  canvas = QImage(width(), height(), QImage::Format_RGB32);
 
-  // Load the image for texturing
-  img.load(":/images/wilkizajac.jpg");
-  if (img.isNull()) {
-    throw new std::runtime_error{ "Cannot open file 'room.jpg' in exercise 6" };
-  }
+  update();
 
-  // Set up the checkbox for bilinear interpolation
-  bilinearCheckBox = new QCheckBox("Enable Bilinear Interpolation", this);
-  bilinearCheckBox->setGeometry(10, height() - 40, 200, 30);
-  connect(bilinearCheckBox,
-          &QCheckBox::toggled,
-          this,
-          &Ekran::onBilinearInterpolationToggled);
-
-  // Set up the layout
-  QVBoxLayout* layout = new QVBoxLayout;
-
-  // Create a horizontal layout to hold the images side by side
-  QHBoxLayout* imageLayout = new QHBoxLayout;
-  imageLayout->setSpacing(0);
-
-  // Create a container for the left image (original image)
-  QWidget* leftImageWidget = new QWidget(this);
-  leftImageWidget->setGeometry(10, 10, 400, 400);
-  imageLayout->addWidget(leftImageWidget);
-
-  // Create a container for the right image (textured output)
-  QWidget* rightImageWidget = new QWidget(this);
-  rightImageWidget->setGeometry(420, 10, 400, 400);
-  imageLayout->addWidget(rightImageWidget);
-
-  layout->addLayout(imageLayout);
-  layout->addWidget(bilinearCheckBox);
-
-  // Set the layout for the main widget
-  setLayout(layout);
-
-  // Initialize triangle points
-  leftTrianglePoints.push_back(QPoint(100, 100));
-  leftTrianglePoints.push_back(QPoint(200, 300));
-  leftTrianglePoints.push_back(QPoint(300, 100));
-
-  rightTrianglePoints.push_back(QPoint(900, 100));
-  rightTrianglePoints.push_back(QPoint(1000, 300));
-  rightTrianglePoints.push_back(QPoint(1100, 100));
+  loadCube();
+  canvas.fill(Qt::black);
+  transform();
 }
 
 void
@@ -197,67 +660,7 @@ Ekran::paintEvent(QPaintEvent* event)
 
   // Draw the left image (original)
   // QRect leftImageRect(10, 10, 400, 400);
-  p.drawImage(0, 0, img);
-
-  // Draw the points as red ellipses, centered on the points
-  // Draw the triangle using the points in 'points'
-  if (leftTrianglePoints.size() == 3) {
-    for (const auto& point : leftTrianglePoints) {
-      p.setBrush(Qt::red);
-      constexpr int radius = MovablePoint::POINT_RADIUS;
-      p.drawEllipse(point - QPoint(radius / 2, radius / 2), radius, radius);
-    }
-
-    // Convert std::vector<QPoint> to QPolygon
-    QPolygon triangle;
-    for (const auto& point : leftTrianglePoints) {
-      triangle << point; // Add points to QPolygon
-    }
-
-    p.setBrush(Qt::NoBrush);    // No fill for the triangle
-    p.setPen(QPen(Qt::red, 2)); // Red outline for the triangle
-    p.drawPolygon(triangle);    // Draw the triangle
-  }
-
-  canvas.fill(Qt::black); // Clear the canvas to avoid leftover pixels
-  applyTexturing(canvas,
-                 img,
-                 leftTrianglePoints,
-                 rightTrianglePoints,
-                 bilinearCheckBox->isChecked());
-
-  // Draw the right image (textured output using barycentric coordinates)
-  p.drawImage(img.size().width(), 0, canvas);
-  if (rightTrianglePoints.size() == 3) {
-    for (const auto& point : rightTrianglePoints) {
-      p.setBrush(Qt::red);
-      constexpr int radius = MovablePoint::POINT_RADIUS;
-      p.drawEllipse(point - QPoint(radius / 2, radius / 2), radius, radius);
-    }
-    // Convert std::vector<QPoint> to QPolygon
-    QPolygon triangle;
-    for (const auto& point : rightTrianglePoints) {
-      triangle << point; // Add points to QPolygon
-    }
-
-    p.setBrush(Qt::NoBrush);    // No fill for the triangle
-    p.setPen(QPen(Qt::red, 2)); // Red outline for the triangle
-    p.drawPolygon(triangle);    // Draw the triangle
-  }
-
-  // Draw a border around the canvas
-  int canvasX = img.size().width(); // The starting X position of the canvas
-  int canvasY = 0;                  // The starting Y position of the canvas
-  int canvasWidth = canvas.width();
-  int canvasHeight = canvas.height();
-  // Set pen for the border
-  p.setPen(QPen(Qt::white, 3)); // White border with thickness 3
-  p.setBrush(Qt::NoBrush);      // No fill for the border
-  p.drawRect(
-    canvasX, canvasY, canvasWidth, canvasHeight); // Draw the rectangle (border)
-
-  // Optionally, you can implement barycentric coordinates texturing here
-  // and update the canvas accordingly if the checkbox is checked
+  p.drawImage(0, 0, canvas);
 }
 
 void
