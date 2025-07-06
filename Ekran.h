@@ -113,6 +113,9 @@ private:
   QSlider* sliderRZ = new QSlider(Qt::Horizontal);
 
   QCheckBox* showBackLines;
+  QImage texture;
+  QCheckBox *showTexture;
+  bool useBilinear = true;
 
   void loadCube();
   void mxmMultiply(float a[4][4], float b[4][4]);
@@ -121,6 +124,9 @@ private:
   void drawCubeLines();
   void setVisibility();
   void drawCubeFaces();
+  void drawTexturedTriangle(const QPoint& p1, const QPoint& p2, const QPoint& p3,
+                            const QPoint& t1, const QPoint& t2, const QPoint& t3);
+  void drawCubeTextured();
 };
 
 #endif // EKRAN_H

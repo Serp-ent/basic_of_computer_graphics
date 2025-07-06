@@ -675,25 +675,19 @@ applyTexturing(QImage& canvas,
   }
 }
 
-bool
-calculateBarycentric(const QPoint& A,
-                     const QPoint& B,
-                     const QPoint& C,
-                     const QPoint& P,
-                     float& u,
-                     float& v,
-                     float& w)
+bool calculateBarycentric(const QPoint& A, const QPoint& B, const QPoint& C,
+                          const QPoint& P, float& u, float& v, float& w)
 {
-  float denominator =
-    (B.y() - C.y()) * (A.x() - C.x()) + (C.x() - B.x()) * (A.y() - C.y());
-  if (denominator == 0.0f)
-    return false; // Degenerate triangle
+    float denominator = (B.y() - C.y()) * (A.x() - C.x()) +
+                        (C.x() - B.x()) * (A.y() - C.y());
+    if (denominator == 0.0f)
+        return false;
 
-  u = ((B.y() - C.y()) * (P.x() - C.x()) + (C.x() - B.x()) * (P.y() - C.y())) /
-      denominator;
-  v = ((C.y() - A.y()) * (P.x() - C.x()) + (A.x() - C.x()) * (P.y() - C.y())) /
-      denominator;
-  w = 1.0f - u - v;
+    u = ((B.y() - C.y()) * (P.x() - C.x()) +
+         (C.x() - B.x()) * (P.y() - C.y())) / denominator;
+    v = ((C.y() - A.y()) * (P.x() - C.x()) +
+         (A.x() - C.x()) * (P.y() - C.y())) / denominator;
+    w = 1.0f - u - v;
 
-  return (u >= 0 && v >= 0 && w >= 0);
+    return true;
 }

@@ -5,4 +5,7 @@
         <file>treasureIsland.jpg</file>
         <file>wilk.png</file>
     </qresource>
+    <qresource prefix="/">
+        <file>texture.jpg</file>
+    </qresource>
 </RCC>

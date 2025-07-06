@@ -267,13 +267,16 @@ Ekran::transform()
     pointsOut[i].y = screenY;
   }
 
-  if (showBackLines->isChecked()) {
-    drawCubeLines();
-  } else {
-    setVisibility();
-    drawCubeFaces();
+  if (showTexture->isChecked()) {
+      setVisibility();
+      drawCubeTextured();
   }
-
+  else if (showBackLines->isChecked()) {
+      drawCubeLines();
+  } else {
+      setVisibility();
+      drawCubeFaces();
+  }
   update();
 }
 
@@ -654,6 +657,27 @@ Ekran::Ekran(QWidget* parent)
   // Initialize the canvas
   canvas = QImage(width(), height(), QImage::Format_RGB32);
 
+  showTexture = new QCheckBox("Show Texture", this);
+  showTexture->setChecked(false);
+  connect(showTexture, &QCheckBox::toggled, this, [this](bool) {
+      update();
+      transform();
+  });
+  boxLayout->addWidget(showTexture);
+
+  texture = QImage(":/texture.jpg");
+  if (texture.isNull()) {
+      // Create a default texture if loading fails
+      texture = QImage(256, 256, QImage::Format_RGB32);
+      QPainter p(&texture);
+      p.fillRect(texture.rect(), Qt::red);
+      for (int i = 0; i < 256; i += 32) {
+          p.setPen(Qt::blue);
+          p.drawLine(i, 0, i, 255);
+          p.drawLine(0, i, 255, i);
+      }
+  }
+
   update();
 
   loadCube();
@@ -680,6 +704,94 @@ Ekran::paintEvent(QPaintEvent* event)
   // Draw the left image (original)
   // QRect leftImageRect(10, 10, 400, 400);
   p.drawImage(0, 0, canvas);
+}
+
+// Add this function to draw textured triangles
+void Ekran::drawTexturedTriangle(const QPoint& p1, const QPoint& p2, const QPoint& p3,
+                                 const QPoint& t1, const QPoint& t2, const QPoint& t3)
+{
+    int minX = std::min({p1.x(), p2.x(), p3.x()});
+    int maxX = std::max({p1.x(), p2.x(), p3.x()});
+    int minY = std::min({p1.y(), p2.y(), p3.y()});
+    int maxY = std::max({p1.y(), p2.y(), p3.y()});
+
+    for (int y = minY; y <= maxY; ++y) {
+        for (int x = minX; x <= maxX; ++x) {
+            QPoint P(x, y);
+            float u, v, w;
+            if (calculateBarycentric(p1, p2, p3, P, u, v, w)) {
+                if (u >= 0 && v >= 0 && w >= 0) {
+                    float texX = u * t1.x() + v * t2.x() + w * t3.x();
+                    float texY = u * t1.y() + v * t2.y() + w * t3.y();
+
+                    // Clamp to texture boundaries
+                    texX = std::clamp(texX, 0.0f, static_cast<float>(texture.width()-1));
+                    texY = std::clamp(texY, 0.0f, static_cast<float>(texture.height()-1));
+
+                    QColor color;
+                    if (useBilinear) {
+                        int x1 = std::floor(texX);
+                        int x2 = std::ceil(texX);
+                        int y1 = std::floor(texY);
+                        int y2 = std::ceil(texY);
+
+                        // Clamp texture coordinates
+                        x1 = std::clamp(x1, 0, texture.width()-1);
+                        x2 = std::clamp(x2, 0, texture.width()-1);
+                        y1 = std::clamp(y1, 0, texture.height()-1);
+                        y2 = std::clamp(y2, 0, texture.height()-1);
+
+                        float a = texX - x1;
+                        float b = texY - y1;
+
+                        QColor p1 = texture.pixelColor(x1, y1);
+                        QColor p2 = texture.pixelColor(x2, y1);
+                        QColor p3 = texture.pixelColor(x1, y2);
+                        QColor p4 = texture.pixelColor(x2, y2);
+
+                        color = bilinear_interpolation_color(a, b, p1, p2, p3, p4);
+                    } else {
+                        int texX_int = static_cast<int>(std::round(texX));
+                        int texY_int = static_cast<int>(std::round(texY));
+                        texX_int = std::clamp(texX_int, 0, texture.width()-1);
+                        texY_int = std::clamp(texY_int, 0, texture.height()-1);
+                        color = texture.pixelColor(texX_int, texY_int);
+                    }
+
+                    drawPixel(canvas, x, y, color.red(), color.green(), color.blue());
+                }
+            }
+        }
+    }
+}
+
+void Ekran::drawCubeTextured()
+{
+    for (int i = 0; i < faces.size(); i++) {
+        if (!faces[i].visible) continue;
+
+        QPoint t1(0, 0);
+        QPoint t2(texture.width(), 0);
+        QPoint t3(texture.width(), texture.height());
+        QPoint t4(0, texture.height());
+
+        QPoint point_a = QPoint{pointsOut[faces[i].a].x, pointsOut[faces[i].a].y};
+        QPoint point_b = QPoint{pointsOut[faces[i].b].x, pointsOut[faces[i].b].y};
+        QPoint point_c = QPoint{pointsOut[faces[i].c].x, pointsOut[faces[i].c].y};
+        QPoint point_d = QPoint{pointsOut[faces[i].d].x, pointsOut[faces[i].d].y};
+
+        // First triangle: a-b-c
+        drawTexturedTriangle(
+            point_a, point_b, point_c,
+            t1, t2, t3  // Consistent texture mapping
+            );
+
+        // Second triangle: a-c-d
+        drawTexturedTriangle(
+            point_a, point_c, point_d,
+            t1, t3, t4  // Consistent texture mapping
+            );
+    }
 }
 
 void
