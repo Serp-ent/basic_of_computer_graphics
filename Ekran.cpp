@@ -431,6 +431,19 @@ Ekran::drawCubeLines()
            255,
            255,
            255);
+
+  for (int i = 0; i < faces.size(); i++) {
+      const Face& face = faces[i];
+      // Draw diagonal from first vertex (a) to third vertex (c)
+      drawLine(canvas,
+               pointsOut[face.a].x,
+               pointsOut[face.a].y,
+               pointsOut[face.c].x,
+               pointsOut[face.c].y,
+               255,
+               255,
+               255);
+  }
 }
 
 void
